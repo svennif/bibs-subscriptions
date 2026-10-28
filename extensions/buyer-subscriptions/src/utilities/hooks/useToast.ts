@@ -6,8 +6,10 @@ export enum SuccessToastType {
   Cancelled = 'cancelled',
   Skipped = 'skipped',
   PaymentUpdated = 'paymentUpdated',
+  PaymentUpdateEmailSent = 'paymentUpdateEmailSent',
   ShippingUpdated = 'shippingUpdated',
   DeliveryUpdated = 'deliveryUpdated',
+  SubscriptionUpdated = 'subscriptionUpdated',
   Hidden = 'hidden',
 }
 

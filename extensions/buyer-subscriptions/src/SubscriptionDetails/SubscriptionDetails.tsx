@@ -13,6 +13,7 @@ import {useExtensionApi} from 'foundation/Api';
 import {BillingAttemptErrorType} from 'types';
 import {useToast, SuccessToastType} from 'utilities/hooks/useToast';
 import {DetailsActions} from './DetailsActions';
+import {PaymentMethodCard} from './components/PaymentMethodCard';
 
 interface SubscriptionDetailsProps {
   id: string;
@@ -122,6 +123,7 @@ export function SubscriptionDetails({id}: SubscriptionDetailsProps) {
               <PriceSummaryCard price={priceBreakdownEstimate} lines={lines} />
             ) : null}
             <s-box display={SHOW_WHEN_NARROW}>{overviewCard}</s-box>
+            <PaymentMethodCard contractId={contractId} status={status} />
             <PastOrdersCard orders={orders} />
           </s-stack>
         </s-grid>

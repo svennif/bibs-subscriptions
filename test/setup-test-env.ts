@@ -2,8 +2,22 @@ import '@testing-library/jest-dom/vitest';
 import '@testing-library/react';
 import '@shopify/react-testing/matchers';
 
+import {copyFileSync, existsSync} from 'node:fs';
+import {resolve} from 'node:path';
 import {beforeAll, vi} from 'vitest';
 import {API_KEY, API_SECRET_KEY, APP_URL, SCOPE} from './constants';
+import {TEST_DB_DIR, TEST_DB_TEMPLATE} from './test-db';
+
+// Give each test worker its own copy of the test database, so test files
+// running in parallel don't interfere with each other or with prisma/data.db
+const workerDatabase = resolve(
+  TEST_DB_DIR,
+  `worker-${process.env.VITEST_POOL_ID ?? '0'}.db`,
+);
+if (!existsSync(workerDatabase) && existsSync(TEST_DB_TEMPLATE)) {
+  copyFileSync(TEST_DB_TEMPLATE, workerDatabase);
+}
+process.env.TEST_DATABASE_URL = `file:${workerDatabase}`;
 
 process.env.SCOPES = SCOPE;
 process.env.SHOPIFY_APP_URL = APP_URL;

@@ -171,16 +171,28 @@ export class SubscriptionContractDraft {
 
   public async updateLine(
     lineId: string,
-    {quantity, currentPrice, pricingPolicy}: UpdateLineInput,
+    {
+      quantity,
+      currentPrice,
+      pricingPolicy,
+      productVariantId,
+      sellingPlanId,
+      sellingPlanName,
+    }: UpdateLineInput,
   ) {
-    if (!quantity && !currentPrice) {
-      throw new Error('one of quantity or price are required');
+    if (!quantity && !currentPrice && !productVariantId && !sellingPlanId) {
+      throw new Error(
+        'one of quantity, price, product variant or selling plan are required',
+      );
     }
 
     const input = {
       quantity,
       currentPrice,
       ...(pricingPolicy && {pricingPolicy}),
+      ...(productVariantId && {productVariantId}),
+      ...(sellingPlanId && {sellingPlanId}),
+      ...(sellingPlanName && {sellingPlanName}),
     };
 
     const response = await this.graphql(

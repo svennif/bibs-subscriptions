@@ -51,7 +51,9 @@
     "paymentMethod": "Betalingsmetode",
     "edit": "Brug ny betalingsmetode",
     "errorBannerTitle": "Betalingsmetoden kunne ikke opdateres",
-    "fetchError": "Kan ikke hente betalingsmetoder. Prøv igen."
+    "fetchError": "Kan ikke hente betalingsmetoder. Prøv igen.",
+    "emailDescription": "Vi sender dig et sikkert link pr. e-mail, hvor du kan opdatere betalingsmetoden for dette abonnement.",
+    "sendLink": "Send mig et link"
   },
   "pastOrdersCard": {
     "pastOrders": "Tidligere ordrer",
@@ -116,7 +118,9 @@
     "skipped": "Næste ordre er sprunget over",
     "paymentUpdated": "Betalingsmetoden er opdateret",
     "shippingUpdated": "Leveringsmetoden er opdateret",
-    "deliveryUpdated": "Leveringsmetoden er opdateret"
+    "deliveryUpdated": "Leveringsmetoden er opdateret",
+    "paymentUpdateEmailSent": "Tjek din e-mail for et link til at opdatere din betalingsmetode",
+    "subscriptionUpdated": "Abonnement opdateret"
   },
   "upcomingOrdersModal": {
     "title": "Kommende ordrer",
@@ -154,5 +158,50 @@
   "subscriptionDetailsError": "Kunne ikke hente abonnementsoplysninger. Prøv igen.",
   "subscriptionList": {
     "fetchError": "Kunne ikke hente abonnementer. Prøv igen."
+  },
+  "paymentMethodCard": {
+    "cardEndingIn": "{{brand}}, der slutter på {{lastDigits}}",
+    "expires": "Udløber {{date}}",
+    "bankAccount": "Bankkonto",
+    "noPaymentMethod": "Ingen betalingsmetode tilknyttet"
+  },
+  "editSubscription": {
+    "title": "Rediger abonnement",
+    "editButton": "Rediger abonnement",
+    "backToSubscription": "Tilbage til abonnement",
+    "frequency": "Leveringsfrekvens",
+    "products": "Produkter",
+    "product": "Produkt",
+    "quantity": "Antal",
+    "remove": "Fjern",
+    "removeAccessibilityLabel": "Fjern {{title}}",
+    "addProduct": "Tilføj produkt",
+    "outOfStock": "udsolgt",
+    "unavailableVariant": "{{title}} er udsolgt i denne variant. Vælg en anden for at fortsætte.",
+    "unavailableProduct": "Dette produkt tilbydes ikke længere i dit abonnement.",
+    "invalidQuantity": "Antal skal være mellem 1 og {{max}}.",
+    "minimumItems": "Abonnementer kræver mindst {{count}} produkter.",
+    "summary": "Oversigt",
+    "totalItems": {
+      "one": "{{count}} produkt",
+      "other": "{{count}} produkter"
+    },
+    "estimatedTotal": "Anslået pris pr. levering",
+    "estimateNote": "Den endelige pris bekræftes, når du gemmer. Ændringerne gælder fra din næste ordre.",
+    "save": "Gem ændringer",
+    "discard": "Annuller",
+    "loadError": "Vi kunne ikke hente dit abonnement. Prøv igen.",
+    "notEditable": "Dette abonnement kan ikke redigeres online. Kontakt os, hvis du har brug for at lave ændringer.",
+    "errorBannerTitle": "Abonnementet kunne ikke opdateres",
+    "errors": {
+      "BELOW_MINIMUM": "Dit abonnement skal indeholde mindst {{count}} produkter.",
+      "INELIGIBLE_VARIANT": "Et af de valgte produkter kan ikke tilføjes til dette abonnement.",
+      "UNAVAILABLE": "Et af de valgte produkter er udsolgt.",
+      "INVALID_PLAN": "Den valgte leveringsfrekvens er ikke tilgængelig.",
+      "INVALID_QUANTITY": "Et af antallene er ikke gyldigt.",
+      "NOT_EDITABLE": "Dette abonnement kan ikke redigeres lige nu.",
+      "UPDATE_FAILED": "Vi kunne ikke gemme dine ændringer. Prøv igen.",
+      "generic": "Vi kunne ikke gemme dine ændringer. Prøv igen."
+    }
   }
 }

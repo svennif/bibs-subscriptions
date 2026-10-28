@@ -251,6 +251,10 @@ describe('<SubscriptionDetails />', () => {
       expect(queryPageAction('Pause')).toBeInTheDocument();
       expect(queryPageAction('Cancel')).toBeInTheDocument();
       expect(queryPageAction('Resume')).not.toBeInTheDocument();
+      expect(queryPageAction('Edit subscription')).toHaveAttribute(
+        'href',
+        'extension:/subscriptions/1/edit',
+      );
     });
 
     it('shows resume and cancel buttons when status is paused', async () => {
@@ -263,6 +267,7 @@ describe('<SubscriptionDetails />', () => {
       expect(queryPageAction('Resume')).toBeInTheDocument();
       expect(queryPageAction('Cancel')).toBeInTheDocument();
       expect(queryPageAction('Pause')).not.toBeInTheDocument();
+      expect(queryPageAction('Edit subscription')).toBeInTheDocument();
     });
 
     it('does not show any action buttons when the status is cancelled', async () => {
@@ -275,6 +280,17 @@ describe('<SubscriptionDetails />', () => {
       expect(queryPageAction('Pause')).not.toBeInTheDocument();
       expect(queryPageAction('Resume')).not.toBeInTheDocument();
       expect(queryPageAction('Cancel')).not.toBeInTheDocument();
+      expect(queryPageAction('Edit subscription')).not.toBeInTheDocument();
+    });
+
+    it('does not offer editing when the status is failed', async () => {
+      mockSubscription({
+        status: 'FAILED' as SubscriptionContractSubscriptionStatus,
+      });
+
+      await mountWithAppContext(<SubscriptionDetails id="1" />);
+
+      expect(queryPageAction('Edit subscription')).not.toBeInTheDocument();
     });
 
     it('shows a success toast when a subscription is paused', async () => {

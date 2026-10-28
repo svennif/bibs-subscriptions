@@ -56,7 +56,9 @@
     "paymentMethod": "Payment method",
     "edit": "Use new payment method",
     "errorBannerTitle": "Unable to update payment method",
-    "fetchError": "Unable to retrieve payment methods, please try again"
+    "fetchError": "Unable to retrieve payment methods, please try again",
+    "emailDescription": "We'll email you a secure link where you can update the payment method for this subscription.",
+    "sendLink": "Email me a link"
   },
   "pastOrdersCard": {
     "pastOrders": "Past orders",
@@ -121,7 +123,9 @@
     "skipped": "Next order skipped",
     "paymentUpdated": "Payment method updated",
     "shippingUpdated": "Shipping method updated",
-    "deliveryUpdated": "Delivery method updated"
+    "deliveryUpdated": "Delivery method updated",
+    "paymentUpdateEmailSent": "Check your email for a link to update your payment method",
+    "subscriptionUpdated": "Subscription updated"
   },
   "paymentMethodInvalidBanner": "{{brand}} ending in {{lastDigits}} is invalid. Update the payment method below to continue receiving upcoming orders",
   "paymentMethodInvalidBannerGeneric": "Card ending in {{lastDigits}} is invalid. Update the payment method below to continue receiving upcoming orders",
@@ -154,5 +158,50 @@
   "emptyState": {
     "title": "No subscriptions purchased",
     "description": "Go to store to shop for subscriptions"
+  },
+  "paymentMethodCard": {
+    "cardEndingIn": "{{brand}} ending in {{lastDigits}}",
+    "expires": "Expires {{date}}",
+    "bankAccount": "Bank account",
+    "noPaymentMethod": "No payment method on file"
+  },
+  "editSubscription": {
+    "title": "Edit subscription",
+    "editButton": "Edit subscription",
+    "backToSubscription": "Back to subscription",
+    "frequency": "Delivery frequency",
+    "products": "Products",
+    "product": "Product",
+    "quantity": "Quantity",
+    "remove": "Remove",
+    "removeAccessibilityLabel": "Remove {{title}}",
+    "addProduct": "Add product",
+    "outOfStock": "out of stock",
+    "unavailableVariant": "{{title}} is out of stock in this option. Choose another option to continue.",
+    "unavailableProduct": "This product is no longer offered in your subscription plan.",
+    "invalidQuantity": "Quantities must be between 1 and {{max}}.",
+    "minimumItems": "Subscriptions require a minimum of {{count}} items.",
+    "summary": "Summary",
+    "totalItems": {
+      "one": "{{count}} item",
+      "other": "{{count}} items"
+    },
+    "estimatedTotal": "Estimated price per delivery",
+    "estimateNote": "The final price is confirmed when you save. Changes apply from your next order.",
+    "save": "Save changes",
+    "discard": "Cancel",
+    "loadError": "We couldn't load your subscription. Please try again.",
+    "notEditable": "This subscription can't be edited online. Please contact us if you need to make changes.",
+    "errorBannerTitle": "Unable to update subscription",
+    "errors": {
+      "BELOW_MINIMUM": "Your subscription needs at least {{count}} items.",
+      "INELIGIBLE_VARIANT": "One of the selected products can't be added to this subscription.",
+      "UNAVAILABLE": "One of the selected products is out of stock.",
+      "INVALID_PLAN": "The selected delivery frequency isn't available.",
+      "INVALID_QUANTITY": "One of the quantities isn't valid.",
+      "NOT_EDITABLE": "This subscription can't be edited right now.",
+      "UPDATE_FAILED": "We couldn't save your changes. Please try again.",
+      "generic": "We couldn't save your changes. Please try again."
+    }
   }
 }

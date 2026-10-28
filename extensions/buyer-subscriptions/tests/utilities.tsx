@@ -1,3 +1,5 @@
+/* eslint-disable testing-library/no-unnecessary-act -- the helpers wrap events
+   in act so that async event handlers settle before assertions */
 import type {VNode} from 'preact';
 import {act, fireEvent, render} from '@testing-library/preact';
 
@@ -87,4 +89,30 @@ export function mockHideOverlay() {
     hiddenOverlayIds: () =>
       hideOverlay.mock.contexts.map((element) => (element as HTMLElement).id),
   };
+}
+
+/**
+ * Dispatches a change event on a choice list with the given selected values.
+ */
+export async function changeValues(element: Element, values: string[]) {
+  await act(async () => {
+    (element as HTMLElement & {values: string[]}).values = values;
+    fireEvent.change(element);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+  });
+}
+
+/**
+ * Stubs the global `navigation` object of customer account extensions.
+ */
+export function mockNavigation() {
+  const navigate = vi.fn();
+
+  Object.defineProperty(globalThis, 'navigation', {
+    value: {navigate},
+    configurable: true,
+    writable: true,
+  });
+
+  return {navigate};
 }

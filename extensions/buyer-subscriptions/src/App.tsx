@@ -1,6 +1,7 @@
 import {SubscriptionList} from './SubscriptionList';
-import {getSubscriptionIdFromPath} from 'utilities';
+import {getSubscriptionIdFromPath, isEditSubscriptionPath} from 'utilities';
 import {SubscriptionDetails} from './SubscriptionDetails';
+import {EditSubscription} from './EditSubscription';
 import {useNavigationCurrentEntry} from 'foundation/Api';
 
 export function Router() {
@@ -10,6 +11,10 @@ export function Router() {
 
   if (url?.pathname.includes('subscriptions')) {
     const id = getSubscriptionIdFromPath(url.pathname);
+
+    if (isEditSubscriptionPath(url.pathname)) {
+      return <EditSubscription id={id} />;
+    }
 
     return <SubscriptionDetails id={id} />;
   }

@@ -53,12 +53,17 @@ export interface SubscriptionLineInput {
   currentPrice: number;
   pricingPolicy?: PricingPolicyInput;
   currentOneTimePurchasePrice?: string;
+  sellingPlanId?: string;
+  sellingPlanName?: string;
 }
 
 export interface UpdateLineInput {
   quantity?: number;
   currentPrice?: number;
   pricingPolicy?: PricingPolicyInput;
+  productVariantId?: string;
+  sellingPlanId?: string;
+  sellingPlanName?: string;
 }
 
 export interface SubscriptionDraftUpdateInput {

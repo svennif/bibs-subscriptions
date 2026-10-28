@@ -20,6 +20,10 @@ export function mockApis() {
     return vi.fn();
   });
 
+  const mockUseAppFetch = vi.hoisted(() => {
+    return vi.fn();
+  });
+
   vi.mock('foundation/Api', async (importOriginal) => {
     const original = (await importOriginal()) as any;
 
@@ -54,6 +58,9 @@ export function mockApis() {
         },
       ]),
       useAppRequest: mockUseAppRequest.mockReturnValue(vi.fn()),
+      useAppFetch: mockUseAppFetch.mockReturnValue(
+        vi.fn(async () => new Response(JSON.stringify({paymentMethod: null}))),
+      ),
     };
   });
 
@@ -105,6 +112,24 @@ export function mockApis() {
     });
   }
 
+  /**
+   * Mocks requests to the app backend. The handler receives the path and
+   * request init, and returns the response body and status.
+   */
+  function mockAppFetch(
+    handler: (
+      path: string,
+      init?: RequestInit,
+    ) => {body: object; status?: number},
+  ) {
+    const appFetch = vi.fn(async (path: string, init?: RequestInit) => {
+      const {body, status = 200} = handler(path, init);
+      return new Response(JSON.stringify(body), {status});
+    });
+    mockUseAppFetch.mockReturnValue(appFetch);
+    return appFetch;
+  }
+
   function mockAppRequest(spy: () => void) {
     mockUseAppRequest.mockReturnValue(spy);
   }
@@ -114,5 +139,6 @@ export function mockApis() {
     mockCustomerApiGraphQL,
     mockExtensionApi,
     mockAppRequest,
+    mockAppFetch,
   };
 }

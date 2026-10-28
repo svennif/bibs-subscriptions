@@ -575,7 +575,9 @@ describe('SubscriptionContractDraft', () => {
 
       expect(
         async () => await mockDraft.updateLine(lineId, {}),
-      ).rejects.toThrow('one of quantity or price are required');
+      ).rejects.toThrow(
+        'one of quantity, price, product variant or selling plan are required',
+      );
     });
 
     it('handles errors if updating a subscription line fails', async () => {

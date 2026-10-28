@@ -16,3 +16,17 @@ export function getSubscriptionIdFromPath(pathname: string) {
 
   return id;
 }
+
+/**
+ * Whether the path is the edit page of a subscription,
+ * i.e. `/subscriptions/<id>/edit`.
+ */
+export function isEditSubscriptionPath(pathname: string) {
+  const parts = pathname.split('/').filter(Boolean);
+  const subscriptionsTextIndex = parts.lastIndexOf('subscriptions');
+
+  return (
+    subscriptionsTextIndex !== -1 &&
+    parts[subscriptionsTextIndex + 2] === 'edit'
+  );
+}

@@ -37,6 +37,12 @@ declare module './src/SubscriptionDetails/index.ts' {
 }
 
 //@ts-ignore
+declare module './src/EditSubscription/index.ts' {
+  const shopify: import('@shopify/ui-extensions/customer-account.page.render').Api;
+  const globalThis: { shopify: typeof shopify };
+}
+
+//@ts-ignore
 declare module './src/foundation/Api/index.tsx' {
   const shopify: import('@shopify/ui-extensions/customer-account.page.render').Api;
   const globalThis: { shopify: typeof shopify };
@@ -92,6 +98,12 @@ declare module './src/foundation/Api/useAppRequest.ts' {
 
 //@ts-ignore
 declare module './src/foundation/Api/useNavigationCurrentEntry.ts' {
+  const shopify: import('@shopify/ui-extensions/customer-account.page.render').Api;
+  const globalThis: { shopify: typeof shopify };
+}
+
+//@ts-ignore
+declare module './src/foundation/Api/useAppFetch.ts' {
   const shopify: import('@shopify/ui-extensions/customer-account.page.render').Api;
   const globalThis: { shopify: typeof shopify };
 }
@@ -319,6 +331,12 @@ declare module './src/SubscriptionDetails/DetailsActions/index.ts' {
 }
 
 //@ts-ignore
+declare module './src/SubscriptionDetails/components/PaymentMethodCard/index.ts' {
+  const shopify: import('@shopify/ui-extensions/customer-account.page.render').Api;
+  const globalThis: { shopify: typeof shopify };
+}
+
+//@ts-ignore
 declare module './src/SubscriptionDetails/hooks/graphql/SubscriptionDetailsQuery.ts' {
   const shopify: import('@shopify/ui-extensions/customer-account.page.render').Api;
   const globalThis: { shopify: typeof shopify };
@@ -500,6 +518,54 @@ declare module './src/SubscriptionDetails/components/NotFound/NotFound.tsx' {
 
 //@ts-ignore
 declare module './src/SubscriptionDetails/DetailsActions/DetailsActions.tsx' {
+  const shopify: import('@shopify/ui-extensions/customer-account.page.render').Api;
+  const globalThis: { shopify: typeof shopify };
+}
+
+//@ts-ignore
+declare module './src/EditSubscription/EditSubscription.tsx' {
+  const shopify: import('@shopify/ui-extensions/customer-account.page.render').Api;
+  const globalThis: { shopify: typeof shopify };
+}
+
+//@ts-ignore
+declare module './src/EditSubscription/components/EditLineRow.tsx' {
+  const shopify: import('@shopify/ui-extensions/customer-account.page.render').Api;
+  const globalThis: { shopify: typeof shopify };
+}
+
+//@ts-ignore
+declare module './src/EditSubscription/hooks/useSubscriptionEditData.ts' {
+  const shopify: import('@shopify/ui-extensions/customer-account.page.render').Api;
+  const globalThis: { shopify: typeof shopify };
+}
+
+//@ts-ignore
+declare module './src/EditSubscription/utilities.ts' {
+  const shopify: import('@shopify/ui-extensions/customer-account.page.render').Api;
+  const globalThis: { shopify: typeof shopify };
+}
+
+//@ts-ignore
+declare module './src/SubscriptionDetails/components/PaymentMethodCard/PaymentMethodCard.tsx' {
+  const shopify: import('@shopify/ui-extensions/customer-account.page.render').Api;
+  const globalThis: { shopify: typeof shopify };
+}
+
+//@ts-ignore
+declare module './src/utilities/constants.ts' {
+  const shopify: import('@shopify/ui-extensions/customer-account.page.render').Api;
+  const globalThis: { shopify: typeof shopify };
+}
+
+//@ts-ignore
+declare module './src/SubscriptionDetails/components/PaymentMethodCard/PaymentMethodUpdateModal.tsx' {
+  const shopify: import('@shopify/ui-extensions/customer-account.page.render').Api;
+  const globalThis: { shopify: typeof shopify };
+}
+
+//@ts-ignore
+declare module './src/SubscriptionDetails/components/PaymentMethodCard/usePaymentMethod.ts' {
   const shopify: import('@shopify/ui-extensions/customer-account.page.render').Api;
   const globalThis: { shopify: typeof shopify };
 }

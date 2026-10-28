@@ -7,7 +7,9 @@ import {
 import {getPauseModalId} from 'components/PauseSubscriptionModal';
 import {getResumeModalId} from 'components/ResumeSubscriptionModal';
 import {getCancelModalId} from 'components/CancelSubscriptionModal';
+import {parseGid} from '@shopify/admin-graphql-api-utilities';
 import {useExtensionApi} from 'foundation/Api';
+import {getEditSubscriptionUrl} from '../../EditSubscription';
 import {SuccessToastType, useToast} from 'utilities/hooks/useToast';
 
 export interface DetailsActionsProps {
@@ -87,6 +89,14 @@ export function DetailsActions({
             onResumeSubscription={onResumeSubscription}
           />
         </>
+      ) : null}
+      {status === 'ACTIVE' || status === 'PAUSED' ? (
+        <s-button
+          slot="secondary-actions"
+          href={getEditSubscriptionUrl(parseGid(contractId))}
+        >
+          {i18n.translate('editSubscription.editButton')}
+        </s-button>
       ) : null}
       <s-button
         slot="secondary-actions"

@@ -26,6 +26,7 @@ export default defineConfig({
     environment: 'happy-dom',
     // By default vitest v2 uses 'forks' but that fails in CI, possibly because of how our VMs are set up
     pool: 'threads',
+    globalSetup: ['./test/global-setup-db.ts'],
     setupFiles: [
       './test/setup-test-env.ts',
       './test/setup-i18n.ts',
