@@ -1,13 +1,5 @@
-import {useState} from 'react';
-import {
-  Button,
-  Banner,
-  InlineLayout,
-  InlineSpacer,
-  Modal,
-  TextBlock,
-  BlockStack,
-} from '@shopify/ui-extensions-react/customer-account';
+import {useRef, useState} from 'preact/hooks';
+import {parseGid} from '@shopify/admin-graphql-api-utilities';
 import {useFormatDate} from 'utilities/hooks/useFormatDate';
 
 import SkipBillingCycleMutation from './graphql/SkipBillingCycleMutation';
@@ -25,7 +17,9 @@ export interface SkipNextOrderModalProps {
   onSkipOrder: () => void;
 }
 
-export const SKIP_NEXT_ORDER_MODAL_ID = 'skip-next-order-modal';
+export function getSkipNextOrderModalId(contractId: string) {
+  return `skip-next-order-modal-${parseGid(contractId)}`;
+}
 
 export function SkipNextOrderModal({
   contractId,
@@ -33,10 +27,9 @@ export function SkipNextOrderModal({
   resumeDate,
   onSkipOrder,
 }: SkipNextOrderModalProps) {
-  const {
-    i18n,
-    ui: {overlay},
-  } = useExtensionApi();
+  const modalId = getSkipNextOrderModalId(contractId);
+  const modalRef = useRef<HTMLElementTagNameMap['s-modal']>(null);
+  const {i18n} = useExtensionApi();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
 
@@ -76,46 +69,51 @@ export function SkipNextOrderModal({
 
     clearErrorState();
     setLoading(false);
-    overlay.close(SKIP_NEXT_ORDER_MODAL_ID);
+    modalRef.current?.hideOverlay();
     onSkipOrder();
   }
 
   return (
-    <Modal
-      padding
-      title={i18n.translate('skipNextOrder.text')}
-      onClose={clearErrorState}
-      id={SKIP_NEXT_ORDER_MODAL_ID}
+    <s-modal
+      ref={modalRef}
+      id={modalId}
+      heading={i18n.translate('skipNextOrder.text')}
+      padding="base"
+      onHide={clearErrorState}
     >
-      <BlockStack spacing="loose">
+      <s-stack gap="large">
         {error && (
-          <Banner
-            status="critical"
-            title={i18n.translate('skipNextOrder.errorBannerTitle')}
+          <s-banner
+            tone="critical"
+            heading={i18n.translate('skipNextOrder.errorBannerTitle')}
           >
             {errorMessage}
-          </Banner>
+          </s-banner>
         )}
-        <TextBlock>
+        <s-paragraph>
           {resumeDate
             ? i18n.translate('skipNextOrder.date', {
                 date: formatDate(resumeDate),
               })
             : i18n.translate('skipNextOrder.generic')}
-        </TextBlock>
-        <InlineLayout spacing="loose" columns={['fill', 'auto', 'auto']}>
-          <InlineSpacer />
-          <Button
-            onPress={() => overlay.close(SKIP_NEXT_ORDER_MODAL_ID)}
-            kind="plain"
-          >
-            {i18n.translate('close')}
-          </Button>
-          <Button onPress={handleSkipNextOrder} loading={loading}>
-            {i18n.translate('skip')}
-          </Button>
-        </InlineLayout>
-      </BlockStack>
-    </Modal>
+        </s-paragraph>
+      </s-stack>
+      <s-button
+        slot="secondary-actions"
+        variant="secondary"
+        command="--hide"
+        commandFor={modalId}
+      >
+        {i18n.translate('close')}
+      </s-button>
+      <s-button
+        slot="primary-action"
+        variant="primary"
+        loading={loading}
+        onClick={handleSkipNextOrder}
+      >
+        {i18n.translate('skip')}
+      </s-button>
+    </s-modal>
   );
 }

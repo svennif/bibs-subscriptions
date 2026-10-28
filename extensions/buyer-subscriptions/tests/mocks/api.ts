@@ -27,25 +27,22 @@ export function mockApis() {
       ...original,
       useExtensionApi: mockUseExtensionApi.mockReturnValue({
         i18n: vi.fn(),
-        ui: {
-          toast: {
-            show: vi.fn(),
-          },
-          overlay: {
-            close: vi.fn(),
-          },
+        toast: {
+          show: vi.fn(),
         },
-        navigation: {
-          navigate: vi.fn(),
+        sessionToken: {
+          get: vi.fn(),
         },
         localization: {
           extensionLanguage: {
             current: {
               isoCode: 'en',
             },
+            value: {
+              isoCode: 'en',
+            },
           },
         },
-        orderId: 'gid://shopify/Order/123',
       }),
       useGraphqlApi: mockUseGraphqlApi.mockReturnValue([
         vi.fn(),
@@ -84,32 +81,27 @@ export function mockApis() {
 
   function mockExtensionApi(options?: {
     mocks: {
-      closeOverlay?: () => void;
       showToast?: () => void;
-      navigate?: () => void;
     };
   }) {
     mockUseExtensionApi.mockReturnValue({
       i18n: createMockI18n({...translations, ...orderActionTranslations}),
-      ui: {
-        toast: {
-          show: options?.mocks.showToast ?? vi.fn(),
-        },
-        overlay: {
-          close: options?.mocks.closeOverlay ?? vi.fn(),
-        },
+      toast: {
+        show: options?.mocks.showToast ?? vi.fn(),
       },
-      navigation: {
-        navigate: options?.mocks.navigate ?? vi.fn(),
+      sessionToken: {
+        get: vi.fn(),
       },
       localization: {
         extensionLanguage: {
           current: {
             isoCode: 'en',
           },
+          value: {
+            isoCode: 'en',
+          },
         },
       },
-      orderId: 'gid://shopify/Order/123',
     });
   }
 

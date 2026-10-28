@@ -1,19 +1,12 @@
-import {
-  Grid,
-  BlockStack,
-  Style,
-  SkeletonTextBlock,
-  SkeletonImage,
-  Card,
-  View,
-  Page,
-  Banner,
-} from '@shopify/ui-extensions-react/customer-account';
-
 import {useSubscriptionListData} from './hooks/useSubscriptionListData';
 import {SubscriptionListEmptyState, SubscriptionListItem} from './components';
 import {useExtensionApi} from 'foundation/Api';
 import type {BillingAttemptErrorType} from 'types';
+
+// One column on narrow containers, two from 500px, three from 750px.
+// The first matching condition wins, so the widest one comes first.
+export const SUBSCRIPTION_GRID_COLUMNS =
+  '@container (inline-size > 750px) 1fr 1fr 1fr, (inline-size > 500px) 1fr 1fr, 1fr';
 
 export function SubscriptionList() {
   const {i18n} = useExtensionApi();
@@ -73,21 +66,13 @@ export function SubscriptionList() {
     : null;
 
   return (
-    <Page title={i18n.translate('subscriptions')}>
-      <Grid
-        columns={Style.default(['fill'])
-          .when({viewportInlineSize: {min: 'small'}}, ['fill', 'fill'])
-          .when({viewportInlineSize: {min: 'medium'}}, [
-            'fill',
-            'fill',
-            'fill',
-          ])}
-        spacing="loose"
-        rows="auto"
-      >
-        {listItems}
-      </Grid>
-    </Page>
+    <s-page heading={i18n.translate('subscriptions')}>
+      <s-query-container>
+        <s-grid gridTemplateColumns={SUBSCRIPTION_GRID_COLUMNS} gap="large">
+          {listItems}
+        </s-grid>
+      </s-query-container>
+    </s-page>
   );
 }
 
@@ -95,29 +80,20 @@ export function SubscriptionListLoadingState() {
   const {i18n} = useExtensionApi();
 
   return (
-    <Page title={i18n.translate('subscriptions')} loading>
-      <Grid
-        columns={Style.default(['fill'])
-          .when({viewportInlineSize: {min: 'small'}}, ['fill', 'fill'])
-          .when({viewportInlineSize: {min: 'medium'}}, [
-            'fill',
-            'fill',
-            'fill',
-          ])}
-        spacing="loose"
-      >
-        <View data-testid="loading-state">
-          <Card padding>
-            <BlockStack>
-              <SkeletonTextBlock lines={2} size="extraLarge" />
-              <SkeletonImage inlineSize="fill" blockSize={380} />
-              <SkeletonTextBlock lines={3} />
-              <SkeletonTextBlock lines={1} emphasis="bold" size="extraLarge" />
-            </BlockStack>
-          </Card>
-        </View>
-      </Grid>
-    </Page>
+    <s-page heading={i18n.translate('subscriptions')}>
+      <s-query-container>
+        <s-grid gridTemplateColumns={SUBSCRIPTION_GRID_COLUMNS} gap="large">
+          <s-section id="loading-state">
+            <s-stack gap="base">
+              <s-skeleton-paragraph />
+              <s-spinner accessibilityLabel={i18n.translate('subscriptions')} />
+              <s-skeleton-paragraph />
+              <s-skeleton-paragraph />
+            </s-stack>
+          </s-section>
+        </s-grid>
+      </s-query-container>
+    </s-page>
   );
 }
 
@@ -125,8 +101,8 @@ function SubscriptionListErrorState() {
   const {i18n} = useExtensionApi();
 
   return (
-    <Banner status="critical">
+    <s-banner tone="critical">
       {i18n.translate('subscriptionList.fetchError')}
-    </Banner>
+    </s-banner>
   );
 }

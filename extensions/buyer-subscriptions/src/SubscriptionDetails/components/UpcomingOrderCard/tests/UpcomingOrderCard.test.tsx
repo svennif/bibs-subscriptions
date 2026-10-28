@@ -1,14 +1,15 @@
 import {mockUiExtensionComponents} from 'tests/mocks/components';
 import {mockApis} from 'tests/mocks/api';
-import {mountWithAppContext} from 'tests/utilities';
+import {getButton, mountWithAppContext, queryButton} from 'tests/utilities';
 
-import {screen} from '@testing-library/react';
+import {screen} from '@testing-library/preact';
+import {getSkipNextOrderModalId} from 'components/SkipNextOrderModal';
+import {getUpcomingOrdersModalId} from 'components/UpcomingOrdersModal';
 
 import {faker} from '@faker-js/faker';
 
 import type {UpcomingOrderCardProps} from '../UpcomingOrderCard';
 import {UpcomingOrderCard} from '../UpcomingOrderCard';
-import userEvent from '@testing-library/user-event';
 
 const defaultProps: UpcomingOrderCardProps = {
   contractId: '1',
@@ -42,23 +43,42 @@ describe('<UpcomingOrderCard />', () => {
     await mountWithAppContext(<UpcomingOrderCard {...defaultProps} />);
 
     expect(screen.getByText('Upcoming order')).toBeInTheDocument();
-    expect(screen.getByText('Jan 1, 2021')).toBeInTheDocument();
+    // The upcoming orders modal is always rendered and lists the date too
+    expect(
+      screen
+        .getAllByText('Jan 1, 2021')
+        .filter((element) => !element.closest('s-modal')),
+    ).toHaveLength(1);
+  });
+
+  it('disables the skip button when the next order cannot be skipped', async () => {
+    await mountWithAppContext(
+      <UpcomingOrderCard
+        {...defaultProps}
+        upcomingBillingCycles={[
+          {
+            cycleIndex: 0,
+            skipped: false,
+            billingAttemptExpectedDate: '2021-01-01T12:00:00',
+          },
+        ]}
+      />,
+    );
+
+    expect(getButton('Skip')).toHaveAttribute('disabled');
+    expect(getButton('Skip')).not.toHaveAttribute('commandFor');
   });
 
   it('renders skip next order button', async () => {
     await mountWithAppContext(<UpcomingOrderCard {...defaultProps} />);
 
-    expect(
-      screen.getByRole('button', {name: (name) => name.startsWith('Skip')}),
-    ).toBeInTheDocument();
+    expect(queryButton(/^Skip/)).toBeInTheDocument();
   });
 
   it('renders show upcoming orders button', async () => {
     await mountWithAppContext(<UpcomingOrderCard {...defaultProps} />);
 
-    expect(
-      screen.getByRole('button', {name: 'Show upcoming orders'}),
-    ).toBeInTheDocument();
+    expect(getButton('Show upcoming orders')).toBeInTheDocument();
   });
 
   it('renders SkipNextOrderModal if the next order can be skipped', async () => {
@@ -81,7 +101,12 @@ describe('<UpcomingOrderCard />', () => {
       />,
     );
 
-    await userEvent.click(screen.getByRole('button', {name: 'Skip'}));
+    const skipButton = getButton('Skip');
+    expect(skipButton).toHaveAttribute('command', '--show');
+    expect(skipButton).toHaveAttribute(
+      'commandFor',
+      getSkipNextOrderModalId('88'),
+    );
 
     expect(
       screen.getByText(
@@ -146,12 +171,12 @@ describe('<UpcomingOrderCard />', () => {
       />,
     );
 
-    const showUpcomingOrdersButton = screen.getByRole('button', {
-      name: 'Show upcoming orders',
-    });
-    expect(showUpcomingOrdersButton).toBeInTheDocument();
-
-    await userEvent.click(showUpcomingOrdersButton);
+    const showUpcomingOrdersButton = getButton('Show upcoming orders');
+    expect(showUpcomingOrdersButton).toHaveAttribute('command', '--show');
+    expect(showUpcomingOrdersButton).toHaveAttribute(
+      'commandFor',
+      getUpcomingOrdersModalId('88'),
+    );
 
     expect(screen.getAllByText('Jan 1, 2021')).toHaveLength(2);
     expect(screen.getByText('Feb 1, 2021')).toBeInTheDocument();

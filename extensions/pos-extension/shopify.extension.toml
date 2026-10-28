@@ -1,12 +1,14 @@
 # The version of APIs your extension will receive. Learn more:
 # https://shopify.dev/docs/api/usage/versioning
-api_version = "2025-10"
+api_version = "2026-10"
 
 [[extensions]]
 type = "ui_extension"
 name = "pos-extension"
 
 handle = "pos-extension"
+
+uid = "4bd5dcb0-df66-3e26-06d5-03c7fd64820066a3aac5"
 description = "Subscriptions"
 
 # Controls where in POS your extension will be injected,

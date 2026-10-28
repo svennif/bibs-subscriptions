@@ -85,6 +85,7 @@ export type PaymentInstrument =
   | CustomerCreditCard
   | CustomerShopPayAgreement
   | CustomerPaypalBillingAgreement
+  | CustomerBankAccount
   | null;
 
 export interface CustomerCreditCard {
@@ -104,6 +105,11 @@ export type CustomerShopPayAgreement = Omit<
 
 export interface CustomerPaypalBillingAgreement {
   paypalAccountEmail?: string | null;
+}
+
+export interface CustomerBankAccount {
+  __typename: 'BankAccount';
+  lastDigits: string;
 }
 
 export interface Order {

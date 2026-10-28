@@ -1,11 +1,10 @@
-import {useCallback, useState} from 'react';
+import {useCallback, useRef, useState} from 'preact/hooks';
 import type {Address} from '@shopify/address';
 import type {DeliveryOption, UserError} from 'types';
-import {Modal} from '@shopify/ui-extensions-react/customer-account';
 
 import {DeliveryMethodSelectModal, AddressModal} from './components';
 import {useFetchDeliveryOptions} from './hooks/useFetchDeliveryOptions';
-import {DELIVERY_MODAL_ID} from './types';
+import {getDeliveryModalId} from './types';
 import {useExtensionApi} from 'foundation/Api';
 import {SuccessToastType, useToast} from 'utilities/hooks/useToast';
 
@@ -17,20 +16,20 @@ enum DeliveryModalState {
 interface DeliveryModalProps {
   currentAddress: Address;
   subscriptionContractId: string;
-  addressModalOpen: boolean;
   refetchSubscriptionContract: () => void;
-  onClose: () => void;
 }
 
 export function DeliveryModal({
   currentAddress,
   subscriptionContractId,
-  addressModalOpen,
   refetchSubscriptionContract,
-  onClose,
 }: DeliveryModalProps) {
   const {i18n} = useExtensionApi();
+  const modalId = getDeliveryModalId(subscriptionContractId);
+  const modalRef = useRef<HTMLElementTagNameMap['s-modal']>(null);
 
+  // Countries are only loaded once the modal has been opened
+  const [addressModalOpen, setAddressModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [modalState, setModalState] = useState<DeliveryModalState>(
     DeliveryModalState.AddressInput,
@@ -49,23 +48,28 @@ export function DeliveryModal({
     setNewAddress((cur) => ({...cur, ...newValue}));
   }, []);
 
-  const onModalClose = useCallback(
-    (resetAddress = true) => {
-      if (currentAddress && resetAddress) {
-        setNewAddress(currentAddress);
-      }
-      setErrors([]);
-      onClose();
-      setModalState(DeliveryModalState.AddressInput);
-    },
-    [currentAddress, onClose],
-  );
+  // The modal stays mounted between openings, so start from the contract's
+  // current address every time it is shown.
+  const resetModal = useCallback(() => {
+    setNewAddress(currentAddress);
+    setErrors([]);
+    setModalState(DeliveryModalState.AddressInput);
+  }, [currentAddress]);
+
+  const handleShow = useCallback(() => {
+    resetModal();
+    setAddressModalOpen(true);
+  }, [resetModal]);
+
+  const closeModal = useCallback(() => {
+    modalRef.current?.hideOverlay();
+  }, []);
 
   const onSuccess = useCallback(() => {
     showSuccessToast(SuccessToastType.DeliveryUpdated);
-    onModalClose(false);
+    closeModal();
     refetchSubscriptionContract();
-  }, [onModalClose, refetchSubscriptionContract, showSuccessToast]);
+  }, [closeModal, refetchSubscriptionContract, showSuccessToast]);
 
   const handleAddressSave = useCallback(async () => {
     setLoading(true);
@@ -98,7 +102,7 @@ export function DeliveryModal({
             errors={errors}
             handleAddressChange={handleAddressChange}
             onSave={handleAddressSave}
-            onClose={onModalClose}
+            onClose={closeModal}
             loading={loading}
           />
         );
@@ -111,7 +115,7 @@ export function DeliveryModal({
             deliveryOptions={deliveryOptions}
             subscriptionContractId={subscriptionContractId}
             onSelectionChange={setSelectedDeliveryHandle}
-            onClose={onModalClose}
+            onClose={resetModal}
             onSuccess={onSuccess}
           />
         );
@@ -125,14 +129,14 @@ export function DeliveryModal({
   );
 
   return (
-    <Modal
-      id={DELIVERY_MODAL_ID}
-      padding
-      title={modalTitle}
-      onClose={onModalClose}
-      data-testid="delivery-modal"
+    <s-modal
+      ref={modalRef}
+      id={modalId}
+      padding="base"
+      heading={modalTitle}
+      onShow={handleShow}
     >
       {modalContent}
-    </Modal>
+    </s-modal>
   );
 }

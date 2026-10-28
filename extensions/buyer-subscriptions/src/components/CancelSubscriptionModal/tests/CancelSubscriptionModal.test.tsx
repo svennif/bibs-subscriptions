@@ -1,15 +1,17 @@
 import {mockApis} from 'tests/mocks/api';
 import {mockUiExtensionComponents} from 'tests/mocks/components';
-import {screen} from '@testing-library/react';
-import {mountWithAppContext} from 'tests/utilities';
+import {
+  clickButton,
+  getButton,
+  mountWithAppContext,
+  queryByHeading,
+} from 'tests/utilities';
 import type {SubscriptionContractSubscriptionStatus} from 'generatedTypes/customer.types';
 
 import {
-  CANCEL_MODAL_ID,
+  getCancelModalId,
   CancelSubscriptionModal,
 } from '../CancelSubscriptionModal';
-import {clickCloseButton} from 'src/SubscriptionList/components/SubscriptionListItem/tests/TestActions';
-import userEvent from '@testing-library/user-event';
 
 const {mockExtensionApi, mockCustomerApiGraphQL} = mockApis();
 
@@ -18,38 +20,41 @@ const defaultProps = {
   onCancelSubscription: vi.fn(),
 };
 
+const CANCEL_MODAL_ID = getCancelModalId(defaultProps.contractId);
+
 describe('<CancelSubscriptionModal />', () => {
+  let overlays: ReturnType<typeof mockUiExtensionComponents>;
+
   beforeEach(() => {
     mockExtensionApi();
-    mockUiExtensionComponents();
+    overlays = mockUiExtensionComponents();
   });
 
   it('renders with a cancel and close button', async () => {
     await mountWithAppContext(<CancelSubscriptionModal {...defaultProps} />);
 
-    expect(screen.getByTitle('Cancel subscription')).toBeInTheDocument();
-    expect(
-      screen.getByRole('button', {name: 'Cancel subscription'}),
-    ).toBeInTheDocument();
-    expect(screen.getByRole('button', {name: 'Close'})).toBeInTheDocument();
+    expect(queryByHeading('Cancel subscription')).toBeInTheDocument();
+    expect(getButton('Cancel subscription')).toBeInTheDocument();
+    expect(getButton('Close')).toBeInTheDocument();
   });
 
-  it('calls ui.overlay.close after clicking the close button', async () => {
-    const overlayCloseSpy = vi.fn();
-
-    mockExtensionApi({mocks: {closeOverlay: overlayCloseSpy}});
-
+  it('uses a modal id that is unique to the contract', async () => {
     await mountWithAppContext(<CancelSubscriptionModal {...defaultProps} />);
 
-    await clickCloseButton();
-
-    expect(overlayCloseSpy).toHaveBeenCalledWith(CANCEL_MODAL_ID);
+    expect(document.getElementById(CANCEL_MODAL_ID)?.tagName).toBe('S-MODAL');
+    expect(CANCEL_MODAL_ID).toBe('cancel-subscription-modal-1');
   });
 
-  it('calls onCancelSubscription and ui.overlay.close after successfully cancelling a contract', async () => {
-    const overlayCloseSpy = vi.fn();
+  it('closes the modal from the close button', async () => {
+    await mountWithAppContext(<CancelSubscriptionModal {...defaultProps} />);
+
+    const closeButton = getButton('Close');
+    expect(closeButton).toHaveAttribute('command', '--hide');
+    expect(closeButton).toHaveAttribute('commandFor', CANCEL_MODAL_ID);
+  });
+
+  it('calls onCancelSubscription and closes the modal after successfully cancelling a contract', async () => {
     const onCancelSubscriptionSpy = vi.fn();
-    mockExtensionApi({mocks: {closeOverlay: overlayCloseSpy}});
     mockCancelSubscriptionMutation({success: true});
 
     await mountWithAppContext(
@@ -59,16 +64,14 @@ describe('<CancelSubscriptionModal />', () => {
       />,
     );
 
-    await clickCancelSubscriptionButton();
+    await clickButton('Cancel subscription');
 
     expect(onCancelSubscriptionSpy).toHaveBeenCalled();
-    expect(overlayCloseSpy).toHaveBeenCalledWith(CANCEL_MODAL_ID);
+    expect(overlays.hiddenOverlayIds()).toEqual([CANCEL_MODAL_ID]);
   });
 
-  it('does not call onCancelSubscription or ui.overlay.close after failing to cancel a contract', async () => {
-    const overlayCloseSpy = vi.fn();
+  it('does not call onCancelSubscription or close the modal after failing to cancel a contract', async () => {
     const onCancelSubscriptionSpy = vi.fn();
-    mockExtensionApi({mocks: {closeOverlay: overlayCloseSpy}});
     mockCancelSubscriptionMutation({success: false});
 
     await mountWithAppContext(
@@ -78,10 +81,10 @@ describe('<CancelSubscriptionModal />', () => {
       />,
     );
 
-    await clickCancelSubscriptionButton();
+    await clickButton('Cancel subscription');
 
     expect(onCancelSubscriptionSpy).not.toHaveBeenCalled();
-    expect(overlayCloseSpy).not.toHaveBeenCalled();
+    expect(overlays.hideOverlay).not.toHaveBeenCalled();
   });
 
   it('does not render an error banner by default', async () => {
@@ -89,7 +92,7 @@ describe('<CancelSubscriptionModal />', () => {
     await mountWithAppContext(<CancelSubscriptionModal {...defaultProps} />);
 
     expect(
-      screen.queryByTitle('Unable to cancel subscription'),
+      queryByHeading('Unable to cancel subscription'),
     ).not.toBeInTheDocument();
   });
 
@@ -97,20 +100,11 @@ describe('<CancelSubscriptionModal />', () => {
     mockCancelSubscriptionMutation({success: false});
     await mountWithAppContext(<CancelSubscriptionModal {...defaultProps} />);
 
-    await clickCancelSubscriptionButton();
+    await clickButton('Cancel subscription');
 
-    expect(
-      screen.getByTitle('Unable to cancel subscription'),
-    ).toBeInTheDocument();
+    expect(queryByHeading('Unable to cancel subscription')).toBeInTheDocument();
   });
 });
-
-async function clickCancelSubscriptionButton() {
-  const cancelSubscriptionButton = screen.getByRole('button', {
-    name: 'Cancel subscription',
-  });
-  await userEvent.click(cancelSubscriptionButton);
-}
 
 function mockCancelSubscriptionMutation({success = true}: {success: boolean}) {
   mockCustomerApiGraphQL({

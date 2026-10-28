@@ -1,18 +1,9 @@
-import {useState} from 'react';
-import {
-  Heading,
-  Card,
-  Text,
-  Grid,
-  Banner,
-  BlockStack,
-  Button,
-  InlineStack,
-  View,
-} from '@shopify/ui-extensions-react/customer-account';
+import {useState} from 'preact/hooks';
 import {isLessThanOneYearAway} from '@shopify/dates';
 import type {BillingCycle} from 'types';
 import {SkipNextOrderModal, UpcomingOrdersModal} from 'components';
+import {getSkipNextOrderModalId} from 'components/SkipNextOrderModal';
+import {getUpcomingOrdersModalId} from 'components/UpcomingOrdersModal';
 import {getBillingCycleInfo} from 'utilities';
 import {useFormatDate} from 'utilities/hooks/useFormatDate';
 import {useExtensionApi} from 'foundation/Api';
@@ -47,69 +38,71 @@ export function UpcomingOrderCard({
 
   if (!nextBillingDate) return null;
 
+  const canOpenSkipModal = Boolean(
+    canSkipNextBillingCycle && cycleIndexToSkip && resumeDateIfNextCycleSkipped,
+  );
+
   return (
-    <Card padding>
-      <BlockStack spacing="base">
+    <s-section>
+      <s-stack gap="base">
         {showBanner ? (
-          <View padding={['none', 'none', 'base', 'none']}>
-            <Banner
-              onDismiss={() => {
-                setShowBanner(false);
-              }}
-            >
-              <Text appearance="subdued">
-                {i18n.translate('overviewCard.inventoryError')}
-              </Text>
-            </Banner>
-          </View>
+          <s-banner
+            dismissible
+            onDismiss={() => {
+              setShowBanner(false);
+            }}
+          >
+            <s-text color="subdued">
+              {i18n.translate('overviewCard.inventoryError')}
+            </s-text>
+          </s-banner>
         ) : null}
-        <Grid columns={['3fr', '1fr']}>
-          <BlockStack spacing="tight">
-            <Heading level={2}>{i18n.translate('upcomingOrder')}</Heading>
-            <Text appearance="subdued">{formatDate(nextBillingDate)}</Text>
-          </BlockStack>
-          <Button
-            kind="secondary"
+        <s-grid gridTemplateColumns="3fr 1fr" alignItems="center">
+          <s-stack gap="small">
+            <s-heading>{i18n.translate('upcomingOrder')}</s-heading>
+            <s-text color="subdued">{formatDate(nextBillingDate)}</s-text>
+          </s-stack>
+          <s-button
+            variant="secondary"
             disabled={!canSkipNextBillingCycle}
-            overlay={
-              canSkipNextBillingCycle &&
-              cycleIndexToSkip &&
-              resumeDateIfNextCycleSkipped ? (
-                <SkipNextOrderModal
-                  contractId={contractId}
-                  onSkipOrder={onSkipOrder}
-                  cycleIndexToSkip={cycleIndexToSkip}
-                  resumeDate={resumeDateIfNextCycleSkipped}
-                />
-              ) : undefined
+            commandFor={
+              canOpenSkipModal ? getSkipNextOrderModalId(contractId) : undefined
             }
+            command={canOpenSkipModal ? '--show' : undefined}
           >
             {i18n.translate('skip')}
-          </Button>
-        </Grid>
-        <InlineStack>
-          <Button
-            kind="plain"
-            overlay={
-              <UpcomingOrdersModal
-                contractId={contractId}
-                refetchSubscriptionContract={refetchSubscriptionContract}
-                refetchLoading={refetchLoading}
-                upcomingBillingCycles={upcomingBillingCycles}
-              />
-            }
+          </s-button>
+        </s-grid>
+        {canOpenSkipModal ? (
+          <SkipNextOrderModal
+            contractId={contractId}
+            onSkipOrder={onSkipOrder}
+            cycleIndexToSkip={cycleIndexToSkip!}
+            resumeDate={resumeDateIfNextCycleSkipped!}
+          />
+        ) : null}
+        <s-stack direction="inline">
+          <s-link
+            commandFor={getUpcomingOrdersModalId(contractId)}
+            command="--show"
           >
             {i18n.translate('showUpcomingOrders')}
-          </Button>
-        </InlineStack>
+          </s-link>
+        </s-stack>
+        <UpcomingOrdersModal
+          contractId={contractId}
+          refetchSubscriptionContract={refetchSubscriptionContract}
+          refetchLoading={refetchLoading}
+          upcomingBillingCycles={upcomingBillingCycles}
+        />
         {canSkipNextBillingCycle ? null : (
-          <Text appearance="subdued">
+          <s-text color="subdued">
             {isLessThanOneYearAway(new Date(nextBillingDate))
               ? i18n.translate('maxOrdersSkipped')
               : i18n.translate('skipOrderOverYear')}
-          </Text>
+          </s-text>
         )}
-      </BlockStack>
-    </Card>
+      </s-stack>
+    </s-section>
   );
 }

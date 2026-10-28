@@ -1,24 +1,8 @@
-import {
-  BlockStack,
-  ChoiceList,
-  Choice,
-  Text,
-  InlineStack,
-  Grid,
-  InlineLayout,
-  Button,
-  Banner,
-  View,
-  TextField,
-  PhoneField,
-} from '@shopify/ui-extensions-react/customer-account';
-
 import type {Address} from '@shopify/address';
 
 import type {DeliveryOption, UserError} from 'types';
-import {useMemo, useState} from 'react';
+import {useMemo, useState} from 'preact/hooks';
 
-import {DELIVERY_MODAL_ID} from '../../types';
 import {useSelectDeliveryOption} from '../../hooks/useSelectDeliveryOption';
 import {
   deliveryOptionIsLocalDelivery,
@@ -39,6 +23,10 @@ interface DeliveryMethodSelectModalProps {
   onClose: () => void;
 }
 
+/**
+ * The delivery method step of the delivery modal. Renders its content and its
+ * slotted actions as direct children of the parent s-modal.
+ */
 export function DeliveryMethodSelectModal({
   deliveryOptions,
   address,
@@ -49,10 +37,7 @@ export function DeliveryMethodSelectModal({
   onSuccess,
   onClose,
 }: DeliveryMethodSelectModalProps) {
-  const {
-    i18n,
-    ui: {overlay},
-  } = useExtensionApi();
+  const {i18n} = useExtensionApi();
   const selectDeliveryOption = useSelectDeliveryOption();
 
   const [loading, setLoading] = useState(false);
@@ -69,13 +54,12 @@ export function DeliveryMethodSelectModal({
     [deliveryOptions, selectedDeliveryHandle],
   );
 
+  const displayLocalDeliveryInputs =
+    selectedDeliveryOption &&
+    deliveryOptionIsLocalDelivery(selectedDeliveryOption);
+
   const choices = deliveryOptions.map((deliveryOption) => {
     const {code, price, presentmentTitle} = deliveryOption;
-
-    const displayLocalDeliveryInputs =
-      selectedDeliveryOption &&
-      deliveryOptionIsLocalDelivery(selectedDeliveryOption) &&
-      deliveryOptionIsLocalDelivery(deliveryOption);
 
     const isLocalPickup = deliveryOptionIsLocalPickup(deliveryOption);
     const choiceTitle = isLocalPickup
@@ -84,75 +68,35 @@ export function DeliveryMethodSelectModal({
         })
       : presentmentTitle;
 
-    return (
-      <BlockStack key={code}>
-        <Grid columns={['fill', 'auto']}>
-          <Choice id={code} disabled={loading}>
-            <Text>{choiceTitle}</Text>
-            {isLocalPickup
-              ? (() => {
-                  const pickupAddress = {
-                    country: deliveryOption.pickupAddress.countryCode,
-                    province: deliveryOption.pickupAddress.provinceCode,
-                    ...deliveryOption.pickupAddress,
-                  } as Address;
+    // if it doesn't have a price it must be free...
+    const priceText =
+      price && Number(price.amount) !== 0
+        ? i18n.formatCurrency(Number(price.amount), {
+            currency: price?.currencyCode,
+            currencyDisplay: 'narrowSymbol',
+          })
+        : i18n.translate('deliveryMethodSelectModal.free');
 
-                  return (
-                    <View>
-                      <InlineAddress
-                        address={pickupAddress}
-                        appearance="subdued"
-                      />
-                    </View>
-                  );
-                })()
-              : null}
-          </Choice>
-          <Text appearance="subdued">
-            {/* if it doesn't have a price it must be free... */}
-            {price && Number(price.amount) !== 0
-              ? i18n.formatCurrency(Number(price.amount), {
-                  currency: price?.currencyCode,
-                  currencyDisplay: 'narrowSymbol',
-                })
-              : i18n.translate('deliveryMethodSelectModal.free')}
-          </Text>
-        </Grid>
-        {displayLocalDeliveryInputs ? (
-          <View padding={['none', 'base']}>
-            <BlockStack>
-              <BlockStack spacing="extraTight">
-                <PhoneField
-                  value={deliveryPhoneNumber}
-                  onChange={setDeliveryPhoneNumber}
-                  label={i18n.translate(
-                    'deliveryMethodSelectModal.localDeliveryPhoneLabel',
-                  )}
-                />
-                <Text appearance="subdued">
-                  {i18n.translate(
-                    'deliveryMethodSelectModal.localDeliveryPhoneDetails',
-                  )}
-                </Text>
-              </BlockStack>
-              <BlockStack spacing="extraTight">
-                <TextField
-                  value={deliveryInstructions}
-                  onChange={setDeliveryInstructions}
-                  label={i18n.translate(
-                    'deliveryMethodSelectModal.localDeliveryInstructionsLabel',
-                  )}
-                />
-                <Text appearance="subdued">
-                  {i18n.translate(
-                    'deliveryMethodSelectModal.localDeliveryInstructionsDetails',
-                  )}
-                </Text>
-              </BlockStack>
-            </BlockStack>
-          </View>
-        ) : null}
-      </BlockStack>
+    return (
+      <s-choice key={code} value={code} disabled={loading}>
+        {choiceTitle}
+        <s-stack slot="details" gap="small-300">
+          {isLocalPickup
+            ? (() => {
+                const pickupAddress = {
+                  country: deliveryOption.pickupAddress.countryCode,
+                  province: deliveryOption.pickupAddress.provinceCode,
+                  ...deliveryOption.pickupAddress,
+                } as Address;
+
+                return (
+                  <InlineAddress address={pickupAddress} color="subdued" />
+                );
+              })()
+            : null}
+          <s-text color="subdued">{priceText}</s-text>
+        </s-stack>
+      </s-choice>
     );
   });
 
@@ -178,7 +122,6 @@ export function DeliveryMethodSelectModal({
 
       if (deliveryMethod) {
         onSuccess();
-        overlay.close(DELIVERY_MODAL_ID);
       }
     }
   }
@@ -189,28 +132,75 @@ export function DeliveryMethodSelectModal({
   );
 
   return (
-    <BlockStack>
-      {errorMessageDisplay ? (
-        <Banner status="critical">{errorMessageDisplay}</Banner>
-      ) : null}
-      <ChoiceList
-        name="deliveryOptionsChoiceList"
-        value={selectedDeliveryHandle}
-        onChange={onSelectionChange}
+    <>
+      <s-stack gap="base">
+        {errorMessageDisplay ? (
+          <s-banner tone="critical">{errorMessageDisplay}</s-banner>
+        ) : null}
+        <s-choice-list
+          name="deliveryOptionsChoiceList"
+          label={i18n.translate('deliveryMethodSelectModal.title')}
+          labelAccessibilityVisibility="exclusive"
+          values={[selectedDeliveryHandle]}
+          onChange={(event: Event) => {
+            const [value] =
+              (event.currentTarget as HTMLElementTagNameMap['s-choice-list'])
+                .values ?? [];
+            if (value) {
+              onSelectionChange(value);
+            }
+          }}
+        >
+          {choices}
+        </s-choice-list>
+        {displayLocalDeliveryInputs ? (
+          <s-stack gap="base">
+            <s-phone-field
+              value={deliveryPhoneNumber}
+              onChange={(event: Event) =>
+                setDeliveryPhoneNumber(
+                  (event.currentTarget as HTMLInputElement).value,
+                )
+              }
+              label={i18n.translate(
+                'deliveryMethodSelectModal.localDeliveryPhoneLabel',
+              )}
+            />
+            <s-text color="subdued">
+              {i18n.translate(
+                'deliveryMethodSelectModal.localDeliveryPhoneDetails',
+              )}
+            </s-text>
+            <s-text-field
+              value={deliveryInstructions}
+              onChange={(event: Event) =>
+                setDeliveryInstructions(
+                  (event.currentTarget as HTMLInputElement).value,
+                )
+              }
+              label={i18n.translate(
+                'deliveryMethodSelectModal.localDeliveryInstructionsLabel',
+              )}
+            />
+            <s-text color="subdued">
+              {i18n.translate(
+                'deliveryMethodSelectModal.localDeliveryInstructionsDetails',
+              )}
+            </s-text>
+          </s-stack>
+        ) : null}
+      </s-stack>
+      <s-button slot="secondary-actions" variant="secondary" onClick={onClose}>
+        {i18n.translate('cancel')}
+      </s-button>
+      <s-button
+        slot="primary-action"
+        variant="primary"
+        onClick={handleSave}
+        loading={loading}
       >
-        <BlockStack>{choices}</BlockStack>
-      </ChoiceList>
-      <InlineLayout inlineAlignment="end" columns={['fill']}>
-        <></>
-        <InlineStack blockAlignment="center">
-          <Button kind="plain" onPress={onClose}>
-            {i18n.translate('cancel')}
-          </Button>
-          <Button onPress={handleSave} loading={loading}>
-            {i18n.translate('save')}
-          </Button>
-        </InlineStack>
-      </InlineLayout>
-    </BlockStack>
+        {i18n.translate('save')}
+      </s-button>
+    </>
   );
 }

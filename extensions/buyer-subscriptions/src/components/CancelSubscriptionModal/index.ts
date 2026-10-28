@@ -1,1 +1,4 @@
-export {CancelSubscriptionModal} from './CancelSubscriptionModal';
+export {
+  CancelSubscriptionModal,
+  getCancelModalId,
+} from './CancelSubscriptionModal';

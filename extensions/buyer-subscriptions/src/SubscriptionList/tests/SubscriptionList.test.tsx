@@ -1,11 +1,16 @@
-import {mountWithAppContext} from 'tests/utilities';
+import {
+  clickButton,
+  mountWithAppContext,
+  queryAllButtons,
+  queryByHeading,
+} from 'tests/utilities';
 import {mockApis} from 'tests/mocks/api';
 import {mockUiExtensionComponents} from 'tests/mocks/components';
 import {mockUseToast} from 'tests/mocks/toast';
 
 import {beforeEach, describe, expect, it} from 'vitest';
 
-import {screen, waitFor} from '@testing-library/react';
+import {screen, waitFor} from '@testing-library/preact';
 
 import type {SubscriptionContractSubscriptionStatus} from 'generatedTypes/customer.types';
 
@@ -21,7 +26,6 @@ import {
   subscriptionListSkipNextOrder,
 } from '../components/SubscriptionListItem/tests/TestActions';
 import {SuccessToastType} from 'utilities/hooks/useToast';
-import userEvent from '@testing-library/user-event';
 
 type GraphqlContractEdges =
   SubscriptionListQueryData['customer']['subscriptionContracts']['edges'];
@@ -39,8 +43,8 @@ describe('SubscriptionList', () => {
     mockSubscriptions({contractCount: 1});
     await mountWithAppContext(<SubscriptionList />);
 
-    await waitFor(async () => {
-      expect(await screen.findByText('Subscriptions')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(queryByHeading('Subscriptions')).toBeInTheDocument();
     });
   });
 
@@ -51,7 +55,7 @@ describe('SubscriptionList', () => {
     });
     await mountWithAppContext(<SubscriptionList />);
 
-    expect(screen.getByTestId('loading-state')).toBeInTheDocument();
+    expect(document.getElementById('loading-state')).toBeInTheDocument();
   });
 
   it('renders an empty state when there are no subscriptions', async () => {
@@ -84,7 +88,7 @@ describe('SubscriptionList', () => {
     await mountWithAppContext(<SubscriptionList />);
 
     expect(screen.getAllByText('Active')).toHaveLength(contractCount);
-    expect(screen.getAllByText('View details')).toHaveLength(contractCount);
+    expect(queryAllButtons('View details')).toHaveLength(contractCount);
   });
 
   it('displays the total item quantity for each contract', async () => {
@@ -194,7 +198,7 @@ describe('SubscriptionList', () => {
         });
         await mountWithAppContext(<SubscriptionList />);
 
-        await userEvent.click(screen.getByRole('button', {name: 'Resume'}));
+        await clickButton('Resume');
 
         expect(
           screen.getByText(

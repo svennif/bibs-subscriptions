@@ -1,21 +1,25 @@
 import {mockApis} from 'tests/mocks/api';
 import {mockUiExtensionComponents} from 'tests/mocks/components';
 
-import {mountWithAppContext} from 'tests/utilities';
-import {screen, waitFor} from '@testing-library/react';
+import {
+  click,
+  getButton,
+  mountWithAppContext,
+  queryAllButtons,
+  queryButton,
+} from 'tests/utilities';
+import {screen, waitFor} from '@testing-library/preact';
 
 import type {UpcomingOrdersModalProps} from '../UpcomingOrdersModal';
 import {
   UpcomingOrdersModal,
-  UPCOMING_ORDERS_MODAL_ID,
+  getUpcomingOrdersModalId,
 } from '../UpcomingOrdersModal';
-import {clickCloseButton} from 'src/SubscriptionList/components/SubscriptionListItem/tests/TestActions';
-import userEvent from '@testing-library/user-event';
 
 const {mockExtensionApi, mockCustomerApiGraphQL} = mockApis();
 
 const defaultProps: UpcomingOrdersModalProps = {
-  contractId: '1',
+  contractId: 'gid://shopify/SubscriptionContract/1',
   upcomingBillingCycles: [
     {
       cycleIndex: 0,
@@ -32,8 +36,12 @@ const defaultProps: UpcomingOrdersModalProps = {
   refetchLoading: false,
 };
 
-const startsWithSkip = (name: string) => name.startsWith('Skip');
-const startsWithUnskip = (name: string) => name.startsWith('Unskip');
+const UPCOMING_ORDERS_MODAL_ID = getUpcomingOrdersModalId(
+  defaultProps.contractId,
+);
+
+const startsWithSkip = /^Skip/;
+const startsWithUnskip = /^Unskip/;
 
 describe('<UpcomingOrdersModal />', () => {
   beforeEach(() => {
@@ -74,7 +82,7 @@ describe('<UpcomingOrdersModal />', () => {
     expect(screen.getByText('Feb 1, 2021')).toBeInTheDocument();
     expect(screen.getByText('Mar 1, 2021')).toBeInTheDocument();
 
-    expect(screen.getAllByRole('button', {name: startsWithSkip})).toHaveLength(
+    expect(queryAllButtons(startsWithSkip)).toHaveLength(
       3,
     );
   });
@@ -108,23 +116,29 @@ describe('<UpcomingOrdersModal />', () => {
       />,
     );
 
-    expect(screen.getAllByRole('button', {name: startsWithSkip})).toHaveLength(
+    expect(queryAllButtons(startsWithSkip)).toHaveLength(
       2,
     );
     expect(
-      screen.getByRole('button', {name: startsWithUnskip}),
+      queryButton(startsWithUnskip),
     ).toBeInTheDocument();
   });
 
-  it('clicking close button closes the modal', async () => {
-    const overlayCloseSpy = vi.fn();
-    mockExtensionApi({mocks: {closeOverlay: overlayCloseSpy}});
-
+  it('uses a modal id that is unique to the contract', async () => {
     await mountWithAppContext(<UpcomingOrdersModal {...defaultProps} />);
 
-    await clickCloseButton();
+    expect(document.getElementById(UPCOMING_ORDERS_MODAL_ID)?.tagName).toBe(
+      'S-MODAL',
+    );
+    expect(UPCOMING_ORDERS_MODAL_ID).toBe('upcoming-orders-modal-1');
+  });
 
-    expect(overlayCloseSpy).toHaveBeenCalledWith(UPCOMING_ORDERS_MODAL_ID);
+  it('closes the modal from the close button', async () => {
+    await mountWithAppContext(<UpcomingOrdersModal {...defaultProps} />);
+
+    const closeButton = getButton('Close');
+    expect(closeButton).toHaveAttribute('command', '--hide');
+    expect(closeButton).toHaveAttribute('commandFor', UPCOMING_ORDERS_MODAL_ID);
   });
 
   describe('skip order', () => {
@@ -141,7 +155,7 @@ describe('<UpcomingOrdersModal />', () => {
       await mountWithAppContext(
         <UpcomingOrdersModal
           {...defaultProps}
-          contractId="5"
+          contractId="gid://shopify/SubscriptionContract/5"
           refetchSubscriptionContract={refetchSpy}
           upcomingBillingCycles={[
             {
@@ -163,8 +177,8 @@ describe('<UpcomingOrdersModal />', () => {
         />,
       );
 
-      await userEvent.click(
-        screen.getAllByRole('button', {name: startsWithSkip})[1],
+      await click(
+        queryAllButtons(startsWithSkip)[1],
       );
 
       expect(showToastSpy).toHaveBeenCalledWith('Order on Feb 1, 2021 skipped');
@@ -183,7 +197,7 @@ describe('<UpcomingOrdersModal />', () => {
       await mountWithAppContext(
         <UpcomingOrdersModal
           {...defaultProps}
-          contractId="5"
+          contractId="gid://shopify/SubscriptionContract/5"
           refetchSubscriptionContract={refetchSpy}
           upcomingBillingCycles={[
             {
@@ -200,8 +214,8 @@ describe('<UpcomingOrdersModal />', () => {
         />,
       );
 
-      await userEvent.click(
-        screen.getAllByRole('button', {name: startsWithSkip})[0],
+      await click(
+        queryAllButtons(startsWithSkip)[0],
       );
 
       await waitFor(() => {
@@ -226,7 +240,7 @@ describe('<UpcomingOrdersModal />', () => {
       await mountWithAppContext(
         <UpcomingOrdersModal
           {...defaultProps}
-          contractId="5"
+          contractId="gid://shopify/SubscriptionContract/5"
           refetchSubscriptionContract={refetchSpy}
           upcomingBillingCycles={[
             {
@@ -248,8 +262,8 @@ describe('<UpcomingOrdersModal />', () => {
         />,
       );
 
-      await userEvent.click(
-        screen.getByRole('button', {name: startsWithUnskip}),
+      await click(
+        queryButton(startsWithUnskip),
       );
       expect(showToastSpy).toHaveBeenCalledWith(
         'Order on Feb 1, 2021 unskipped',
@@ -269,7 +283,7 @@ describe('<UpcomingOrdersModal />', () => {
       await mountWithAppContext(
         <UpcomingOrdersModal
           {...defaultProps}
-          contractId="5"
+          contractId="gid://shopify/SubscriptionContract/5"
           refetchSubscriptionContract={refetchSpy}
           upcomingBillingCycles={[
             {
@@ -286,8 +300,8 @@ describe('<UpcomingOrdersModal />', () => {
         />,
       );
 
-      await userEvent.click(
-        screen.getByRole('button', {name: startsWithUnskip}),
+      await click(
+        queryButton(startsWithUnskip),
       );
 
       await waitFor(() => {

@@ -1,13 +1,5 @@
-import {useState} from 'react';
-import {
-  Button,
-  Banner,
-  InlineLayout,
-  InlineSpacer,
-  Modal,
-  TextBlock,
-  BlockStack,
-} from '@shopify/ui-extensions-react/customer-account';
+import {useRef, useState} from 'preact/hooks';
+import {parseGid} from '@shopify/admin-graphql-api-utilities';
 import type {Money} from 'types';
 import {useFormatDate} from 'utilities/hooks/useFormatDate';
 
@@ -27,7 +19,9 @@ interface ResumeSubscriptionModalProps {
   onResumeSubscription: () => void;
 }
 
-export const RESUME_MODAL_ID = 'resume-subscription-modal';
+export function getResumeModalId(contractId: string) {
+  return `resume-subscription-modal-${parseGid(contractId)}`;
+}
 
 export function ResumeSubscriptionModal({
   contractId,
@@ -36,10 +30,9 @@ export function ResumeSubscriptionModal({
   nextOrderPrice,
   onResumeSubscription,
 }: ResumeSubscriptionModalProps) {
-  const {
-    i18n,
-    ui: {overlay},
-  } = useExtensionApi();
+  const modalId = getResumeModalId(contractId);
+  const modalRef = useRef<HTMLElementTagNameMap['s-modal']>(null);
+  const {i18n} = useExtensionApi();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | undefined>();
@@ -83,7 +76,7 @@ export function ResumeSubscriptionModal({
       return;
     }
 
-    overlay.close(RESUME_MODAL_ID);
+    modalRef.current?.hideOverlay();
     clearErrorState();
     setLoading(false);
     onResumeSubscription();
@@ -91,22 +84,23 @@ export function ResumeSubscriptionModal({
   }
 
   return (
-    <Modal
-      padding
-      title={i18n.translate('resumeSubscriptionModal.title')}
-      onClose={clearErrorState}
-      id={RESUME_MODAL_ID}
+    <s-modal
+      ref={modalRef}
+      id={modalId}
+      heading={i18n.translate('resumeSubscriptionModal.title')}
+      padding="base"
+      onHide={clearErrorState}
     >
-      <BlockStack spacing="loose">
+      <s-stack gap="large">
         {error ? (
-          <Banner
-            status="critical"
-            title={i18n.translate('resumeSubscriptionModal.errorBannerTitle')}
+          <s-banner
+            tone="critical"
+            heading={i18n.translate('resumeSubscriptionModal.errorBannerTitle')}
           >
             {errorMessage}
-          </Banner>
+          </s-banner>
         ) : null}
-        <TextBlock>
+        <s-paragraph>
           {resumeDate
             ? i18n.translate('resumeSubscriptionModal.descriptionWithDate', {
                 date: formatDate(resumeDate),
@@ -123,17 +117,24 @@ export function ResumeSubscriptionModal({
                 },
               )}`
             : ''}
-        </TextBlock>
-        <InlineLayout spacing="loose" columns={['fill', 'auto', 'auto']}>
-          <InlineSpacer />
-          <Button onPress={() => overlay.close(RESUME_MODAL_ID)} kind="plain">
-            {i18n.translate('close')}
-          </Button>
-          <Button onPress={handleResumeSubscription} loading={loading}>
-            {i18n.translate('resumeSubscriptionModal.continue')}
-          </Button>
-        </InlineLayout>
-      </BlockStack>
-    </Modal>
+        </s-paragraph>
+      </s-stack>
+      <s-button
+        slot="secondary-actions"
+        variant="secondary"
+        command="--hide"
+        commandFor={modalId}
+      >
+        {i18n.translate('close')}
+      </s-button>
+      <s-button
+        slot="primary-action"
+        variant="primary"
+        loading={loading}
+        onClick={handleResumeSubscription}
+      >
+        {i18n.translate('resumeSubscriptionModal.continue')}
+      </s-button>
+    </s-modal>
   );
 }

@@ -1,16 +1,18 @@
 import {mockApis} from 'tests/mocks/api';
 import {mockUiExtensionComponents} from 'tests/mocks/components';
 import {mockUseToast} from 'tests/mocks/toast';
-import {screen} from '@testing-library/react';
 import {beforeEach} from 'vitest';
-import {mountWithAppContext} from 'tests/utilities';
+import {getButton, mountWithAppContext, queryButton} from 'tests/utilities';
 import type {SubscriptionContractSubscriptionStatus} from 'generatedTypes/customer.types';
 
 import type {SubscriptionActionsProps} from '../SubscriptionActions';
 import {
   SubscriptionActions,
-  SUBSCRIPTION_ACTIONS_POPOVER_ID,
+  getSubscriptionActionsMenuId,
 } from '../SubscriptionActions';
+import {getPauseModalId} from 'components/PauseSubscriptionModal';
+import {getResumeModalId} from 'components/ResumeSubscriptionModal';
+import {getSkipNextOrderModalId} from 'components/SkipNextOrderModal';
 import {
   subscriptionListPauseContract,
   subscriptionListResumeContract,
@@ -31,9 +33,11 @@ const defaultProps: SubscriptionActionsProps = {
 };
 
 describe('<SubscriptionActions />', () => {
+  let overlays: ReturnType<typeof mockUiExtensionComponents>;
+
   beforeEach(() => {
     mockExtensionApi();
-    mockUiExtensionComponents();
+    overlays = mockUiExtensionComponents();
   });
 
   it('renders actions for active subscriptions', async () => {
@@ -44,9 +48,9 @@ describe('<SubscriptionActions />', () => {
 
     await mountWithAppContext(<SubscriptionActions {...mockProps} />);
 
-    expect(screen.getByText('View details')).toBeInTheDocument();
-    expect(screen.getByText('Pause')).toBeInTheDocument();
-    expect(screen.getByText('Skip next order')).toBeInTheDocument();
+    expect(getButton('View details')).toBeInTheDocument();
+    expect(getButton('Pause')).toBeInTheDocument();
+    expect(getButton('Skip next order')).toBeInTheDocument();
   });
 
   it('does not render skip next order action when there is no resume date or cycle index to skip', async () => {
@@ -59,9 +63,9 @@ describe('<SubscriptionActions />', () => {
 
     await mountWithAppContext(<SubscriptionActions {...mockProps} />);
 
-    expect(screen.getByText('View details')).toBeInTheDocument();
-    expect(screen.getByText('Pause')).toBeInTheDocument();
-    expect(screen.queryByText('Skip next order')).not.toBeInTheDocument();
+    expect(getButton('View details')).toBeInTheDocument();
+    expect(getButton('Pause')).toBeInTheDocument();
+    expect(queryButton('Skip next order')).not.toBeInTheDocument();
   });
 
   it('renders actions for paused subscriptions', async () => {
@@ -72,8 +76,8 @@ describe('<SubscriptionActions />', () => {
 
     await mountWithAppContext(<SubscriptionActions {...mockProps} />);
 
-    expect(screen.getByText('View details')).toBeInTheDocument();
-    expect(screen.getByText('Resume')).toBeInTheDocument();
+    expect(getButton('View details')).toBeInTheDocument();
+    expect(getButton('Resume')).toBeInTheDocument();
   });
 
   it('renders actions for cancelled subscriptions', async () => {
@@ -84,13 +88,12 @@ describe('<SubscriptionActions />', () => {
 
     await mountWithAppContext(<SubscriptionActions {...mockProps} />);
 
-    expect(screen.getByText('View details')).toBeInTheDocument();
-    expect(screen.queryByText('Pause')).not.toBeInTheDocument();
+    expect(getButton('View details')).toBeInTheDocument();
+    expect(queryButton('Pause')).not.toBeInTheDocument();
   });
 
-  it('calls refetchSubscriptionContract, showToast, and ui.overlay.close when onPauseSubscription is called', async () => {
+  it('calls refetchSubscriptionContract, showToast, and closes the modal when onPauseSubscription is called', async () => {
     const refetchSpy = vi.fn();
-    const overlayCloseSpy = vi.fn();
     const toastSpy = vi.fn();
 
     mockShowSuccessToast(toastSpy);
@@ -111,24 +114,19 @@ describe('<SubscriptionActions />', () => {
       loading: false,
     });
 
-    mockExtensionApi({
-      mocks: {closeOverlay: overlayCloseSpy},
-    });
-
     await mountWithAppContext(<SubscriptionActions {...mockProps} />);
 
     await subscriptionListPauseContract();
 
     expect(refetchSpy).toHaveBeenCalled();
-    expect(overlayCloseSpy).toHaveBeenCalledWith(
-      SUBSCRIPTION_ACTIONS_POPOVER_ID,
-    );
+    expect(overlays.hiddenOverlayIds()).toEqual([
+      getPauseModalId(mockProps.id),
+    ]);
     expect(toastSpy).toHaveBeenCalledWith(SuccessToastType.Paused);
   });
 
-  it('calls refetchSubscriptionContract, showToast and ui.overlay.close when onResumeSubscription is called', async () => {
+  it('calls refetchSubscriptionContract, showToast and closes the modal when onResumeSubscription is called', async () => {
     const refetchSpy = vi.fn();
-    const overlayCloseSpy = vi.fn();
     const mockProps: SubscriptionActionsProps = {
       ...defaultProps,
       status: 'PAUSED' as SubscriptionContractSubscriptionStatus,
@@ -149,22 +147,19 @@ describe('<SubscriptionActions />', () => {
       loading: false,
     });
 
-    mockExtensionApi({mocks: {closeOverlay: overlayCloseSpy}});
-
     await mountWithAppContext(<SubscriptionActions {...mockProps} />);
 
     await subscriptionListResumeContract();
 
     expect(refetchSpy).toHaveBeenCalled();
-    expect(overlayCloseSpy).toHaveBeenCalledWith(
-      SUBSCRIPTION_ACTIONS_POPOVER_ID,
-    );
+    expect(overlays.hiddenOverlayIds()).toEqual([
+      getResumeModalId(mockProps.id),
+    ]);
     expect(showToastSpy).toHaveBeenCalledWith(SuccessToastType.Resumed);
   });
 
-  it('calls refetchSubscriptionContract, showToast and ui.overlay.close when onSkipOrder is called', async () => {
+  it('calls refetchSubscriptionContract, showToast and closes the modal when onSkipOrder is called', async () => {
     const refetchSpy = vi.fn();
-    const overlayCloseSpy = vi.fn();
     const mockProps: SubscriptionActionsProps = {
       ...defaultProps,
       refetchSubscriptionListData: refetchSpy,
@@ -184,16 +179,45 @@ describe('<SubscriptionActions />', () => {
       loading: false,
     });
 
-    mockExtensionApi({mocks: {closeOverlay: overlayCloseSpy}});
-
     await mountWithAppContext(<SubscriptionActions {...mockProps} />);
 
     await subscriptionListSkipNextOrder();
 
     expect(refetchSpy).toHaveBeenCalled();
-    expect(overlayCloseSpy).toHaveBeenCalledWith(
-      SUBSCRIPTION_ACTIONS_POPOVER_ID,
-    );
+    expect(overlays.hiddenOverlayIds()).toEqual([
+      getSkipNextOrderModalId(mockProps.id),
+    ]);
     expect(showToastSpy).toHaveBeenCalledWith(SuccessToastType.Skipped);
+  });
+
+  it('opens the actions menu from the Manage button', async () => {
+    await mountWithAppContext(<SubscriptionActions {...defaultProps} />);
+
+    const menuId = getSubscriptionActionsMenuId(defaultProps.id);
+    expect(getButton('Manage')).toHaveAttribute('commandFor', menuId);
+    expect(document.getElementById(menuId)?.tagName).toBe('S-MENU');
+  });
+
+  it('opens the matching modal from each menu action', async () => {
+    await mountWithAppContext(<SubscriptionActions {...defaultProps} />);
+
+    expect(getButton('Pause')).toHaveAttribute(
+      'commandFor',
+      getPauseModalId(defaultProps.id),
+    );
+    expect(getButton('Pause')).toHaveAttribute('command', '--show');
+    expect(getButton('Skip next order')).toHaveAttribute(
+      'commandFor',
+      getSkipNextOrderModalId(defaultProps.id),
+    );
+  });
+
+  it('links View details to the subscription details page', async () => {
+    await mountWithAppContext(<SubscriptionActions {...defaultProps} />);
+
+    expect(getButton('View details')).toHaveAttribute(
+      'href',
+      'extension:/subscriptions/1',
+    );
   });
 });

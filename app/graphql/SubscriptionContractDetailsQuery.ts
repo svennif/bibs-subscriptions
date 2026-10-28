@@ -169,6 +169,9 @@ query SubscriptionContractDetails($id: ID!) {
         ... on CustomerPaypalBillingAgreement {
           paypalAccountEmail
         }
+        ... on BankAccount {
+          lastDigits
+        }
       }
     }
   }

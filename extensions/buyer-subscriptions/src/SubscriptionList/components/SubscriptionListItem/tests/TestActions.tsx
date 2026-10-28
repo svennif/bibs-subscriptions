@@ -1,39 +1,22 @@
-import userEvent from '@testing-library/user-event';
-import {screen} from '@testing-library/react';
+import {clickButton} from 'tests/utilities';
 
+// Modals are always rendered with Polaris web components, so the trigger button
+// only opens them in the browser. Clicking it still keeps these flows readable.
 export async function subscriptionListPauseContract() {
-  await userEvent.click(screen.getByRole('button', {name: 'Pause'}));
-
-  return await userEvent.click(
-    screen.getByRole('button', {name: 'Pause subscription'}),
-  );
+  await clickButton('Pause');
+  await clickButton('Pause subscription');
 }
 
 export async function subscriptionListResumeContract() {
-  const resumeButton = screen.getByRole('button', {
-    name: 'Resume',
-  });
-  await userEvent.click(resumeButton);
-
-  const confirmResumeButton = screen.getByRole('button', {
-    name: 'Continue',
-  });
-  await userEvent.click(confirmResumeButton);
+  await clickButton('Resume');
+  await clickButton('Continue');
 }
 
 export async function subscriptionListSkipNextOrder() {
-  const skipButton = screen.getByRole('button', {
-    name: 'Skip next order',
-  });
-  await userEvent.click(skipButton);
-
-  const confirmSkipButton = screen.getByRole('button', {
-    name: 'Skip',
-  });
-  await userEvent.click(confirmSkipButton);
+  await clickButton('Skip next order');
+  await clickButton('Skip');
 }
 
 export async function clickCloseButton() {
-  const closeButton = screen.getByRole('button', {name: 'Close'});
-  await userEvent.click(closeButton);
+  await clickButton('Close');
 }

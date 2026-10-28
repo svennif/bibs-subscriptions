@@ -1,21 +1,10 @@
-import {useState} from 'react';
 import type {Address as AddressType} from '@shopify/address';
-import {
-  Card,
-  BlockStack,
-  View,
-  Text,
-  Grid,
-  Style,
-  InlineStack,
-  Icon,
-  Button,
-} from '@shopify/ui-extensions-react/customer-account';
 import {Address} from 'components';
 import type {DeliveryPolicy, SubscriptionStatus} from 'types';
 
 import {useExtensionApi} from 'foundation/Api';
 import {DeliveryModal} from '../DeliveryModal';
+import {getDeliveryModalId} from '../DeliveryModal/types';
 import {createBlankAddress} from '../DeliveryModal/utilities/helpers';
 import type {CountryCode} from 'generatedTypes/customer.types';
 
@@ -27,6 +16,12 @@ export interface OverviewCardProps {
   pickupAddress?: AddressType | null;
   status: SubscriptionStatus;
   refetchSubscriptionContract: () => void;
+  /**
+   * Set to false when the card is rendered more than once (for different
+   * viewport sizes), and render `OverviewCardDeliveryModal` a single time
+   * outside of the cards instead.
+   */
+  renderDeliveryModal?: boolean;
 }
 
 export function OverviewCard({
@@ -37,33 +32,25 @@ export function OverviewCard({
   pickupAddress,
   status,
   refetchSubscriptionContract,
+  renderDeliveryModal = true,
 }: OverviewCardProps) {
   const {i18n} = useExtensionApi();
-  const [addressModalOpen, setAddressModalOpen] = useState(false);
   const isCancelled = status === 'CANCELLED';
+  const deliveryModalId = getDeliveryModalId(contractId);
 
   return (
-    <Card padding>
-      <BlockStack spacing="loose">
-        <Grid
-          columns={Style.default(['fill']).when(
-            {viewportInlineSize: {min: 'small'}},
-            ['1fr', '1fr'],
-          )}
-          rows={Style.default(['auto', 'auto', 'auto', 'auto']).when(
-            {viewportInlineSize: {min: 'small'}},
-            ['auto', 'auto'],
-          )}
-          spacing="loose"
-          blockAlignment="start"
+    <s-section>
+      <s-query-container>
+        <s-grid
+          gridTemplateColumns="@container (inline-size > 500px) 1fr 1fr, 1fr"
+          gap="large"
+          alignItems="start"
         >
-          <BlockStack spacing="tight">
-            <View>
-              <Text emphasis="bold">
-                {i18n.translate('overviewCard.deliveryFrequency')}
-              </Text>
-            </View>
-            <Text>
+          <s-stack gap="small">
+            <s-text type="strong">
+              {i18n.translate('overviewCard.deliveryFrequency')}
+            </s-text>
+            <s-text>
               {i18n.translate(
                 `deliveryInterval.${deliveryPolicy.interval.toLowerCase()}.${
                   deliveryPolicy.intervalCount?.count === 1 ? 'one' : 'other'
@@ -74,90 +61,113 @@ export function OverviewCard({
                       count: deliveryPolicy.intervalCount?.count,
                     },
               )}
-            </Text>
-          </BlockStack>
+            </s-text>
+          </s-stack>
 
           {shippingAddress ? (
-            <BlockStack spacing="tight">
-              <InlineStack>
-                <Text emphasis="bold">
+            <s-stack gap="small">
+              <s-stack direction="inline" gap="small" alignItems="center">
+                <s-text type="strong">
                   {i18n.translate('overviewCard.shippingAddress')}
-                </Text>
+                </s-text>
                 {!isCancelled ? (
-                  <Button
-                    kind="plain"
+                  <s-link
                     accessibilityLabel={i18n.translate(
                       'overviewCard.editShippingAddressButtonLabel',
                     )}
-                    overlay={
-                      <DeliveryModal
-                        currentAddress={shippingAddress}
-                        subscriptionContractId={contractId}
-                        addressModalOpen={addressModalOpen}
-                        refetchSubscriptionContract={
-                          refetchSubscriptionContract
-                        }
-                        onClose={() => setAddressModalOpen(false)}
-                      />
-                    }
-                    onPress={() => {
-                      setAddressModalOpen(true);
-                    }}
+                    commandFor={deliveryModalId}
+                    command="--show"
                   >
-                    <Icon source="pen" appearance="interactive" />
-                  </Button>
+                    <s-icon type="edit" size="small" />
+                  </s-link>
                 ) : null}
-              </InlineStack>
+              </s-stack>
               <Address address={shippingAddress} />
-            </BlockStack>
+            </s-stack>
           ) : null}
           {pickupAddress ? (
-            <BlockStack spacing="tight">
-              <InlineStack>
-                <Text emphasis="bold">
+            <s-stack gap="small">
+              <s-stack direction="inline" gap="small" alignItems="center">
+                <s-text type="strong">
                   {i18n.translate('overviewCard.pickupLocation')}
-                </Text>
+                </s-text>
                 {!isCancelled ? (
-                  <Button
-                    kind="plain"
+                  <s-link
                     accessibilityLabel={i18n.translate(
                       'overviewCard.editPickupAddressButtonLabel',
                     )}
-                    overlay={
-                      <DeliveryModal
-                        currentAddress={createBlankAddress(
-                          pickupAddress.country as CountryCode,
-                        )}
-                        subscriptionContractId={contractId}
-                        addressModalOpen={addressModalOpen}
-                        refetchSubscriptionContract={
-                          refetchSubscriptionContract
-                        }
-                        onClose={() => setAddressModalOpen(false)}
-                      />
-                    }
-                    onPress={() => {
-                      setAddressModalOpen(true);
-                    }}
+                    commandFor={deliveryModalId}
+                    command="--show"
                   >
-                    <Icon source="pen" appearance="interactive" />
-                  </Button>
+                    <s-icon type="edit" size="small" />
+                  </s-link>
                 ) : null}
-              </InlineStack>
-              {pickupAddress ? <Address address={pickupAddress} /> : null}
-            </BlockStack>
+              </s-stack>
+              <Address address={pickupAddress} />
+            </s-stack>
           ) : null}
 
           {shippingMethodTitle ? (
-            <BlockStack spacing="tight">
-              <Text emphasis="bold">
+            <s-stack gap="small">
+              <s-text type="strong">
                 {i18n.translate('overviewCard.shippingMethod')}
-              </Text>
-              <Text>{shippingMethodTitle}</Text>
-            </BlockStack>
+              </s-text>
+              <s-text>{shippingMethodTitle}</s-text>
+            </s-stack>
           ) : null}
-        </Grid>
-      </BlockStack>
-    </Card>
+        </s-grid>
+      </s-query-container>
+      {renderDeliveryModal ? (
+        <OverviewCardDeliveryModal
+          contractId={contractId}
+          shippingAddress={shippingAddress}
+          pickupAddress={pickupAddress}
+          status={status}
+          refetchSubscriptionContract={refetchSubscriptionContract}
+        />
+      ) : null}
+    </s-section>
+  );
+}
+
+export type OverviewCardDeliveryModalProps = Pick<
+  OverviewCardProps,
+  | 'contractId'
+  | 'shippingAddress'
+  | 'pickupAddress'
+  | 'status'
+  | 'refetchSubscriptionContract'
+>;
+
+/**
+ * The modal opened by the edit buttons in OverviewCard.
+ */
+export function OverviewCardDeliveryModal({
+  contractId,
+  shippingAddress,
+  pickupAddress,
+  status,
+  refetchSubscriptionContract,
+}: OverviewCardDeliveryModalProps) {
+  if (status === 'CANCELLED') {
+    return null;
+  }
+
+  const currentAddress = shippingAddress
+    ? shippingAddress
+    : pickupAddress
+      ? createBlankAddress(pickupAddress.country as CountryCode)
+      : null;
+
+  if (!currentAddress) {
+    return null;
+  }
+
+  return (
+    <DeliveryModal
+      currentAddress={currentAddress}
+      subscriptionContractId={contractId}
+      refetchSubscriptionContract={refetchSubscriptionContract}
+    />
   );
 }

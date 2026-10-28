@@ -9,9 +9,16 @@ export default async function extension() {
   const orderId = shopify.orderId;
 
   try {
-    const {data} = await fetchCustomerApi(OrderStatusSubscriptionQuery, {
-      orderId,
-    });
+    const {data, errors} = await fetchCustomerApi(
+      OrderStatusSubscriptionQuery,
+      {
+        orderId,
+      },
+    );
+
+    if (errors?.length) {
+      console.error('Failed to fetch subscription contracts:', errors);
+    }
 
     const contracts = nodesFromEdges(
       data?.order?.subscriptionContracts?.edges || [],

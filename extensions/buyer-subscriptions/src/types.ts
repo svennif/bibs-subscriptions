@@ -1,7 +1,4 @@
-import type {ApiForRenderExtension} from '@shopify/ui-extensions-react/customer-account';
-
-export type FullPageExtensionApi =
-  ApiForRenderExtension<'customer-account.page.render'>;
+export type {FullPageExtensionApi} from 'foundation/Api';
 
 export type SubscriptionStatus =
   | 'ACTIVE'

@@ -1,10 +1,12 @@
-import {Button, Text} from '@shopify/ui-extensions-react/customer-account';
 import type {Money, SubscriptionStatus} from 'types';
 import {
   PauseSubscriptionModal,
   ResumeSubscriptionModal,
   CancelSubscriptionModal,
 } from 'components';
+import {getPauseModalId} from 'components/PauseSubscriptionModal';
+import {getResumeModalId} from 'components/ResumeSubscriptionModal';
+import {getCancelModalId} from 'components/CancelSubscriptionModal';
 import {useExtensionApi} from 'foundation/Api';
 import {SuccessToastType, useToast} from 'utilities/hooks/useToast';
 
@@ -17,6 +19,10 @@ export interface DetailsActionsProps {
   refetchSubscriptionContract: () => void;
 }
 
+/**
+ * Page actions for the subscription details page. Renders slotted buttons, so
+ * it must be a direct child of s-page.
+ */
 export function DetailsActions({
   contractId,
   status,
@@ -50,42 +56,49 @@ export function DetailsActions({
   return (
     <>
       {status === 'ACTIVE' ? (
-        <Button
-          overlay={
-            <PauseSubscriptionModal
-              contractId={contractId}
-              onPauseSubscription={onPauseSubscription}
-            />
-          }
-        >
-          <Text>{i18n.translate('subscriptionActions.pause')}</Text>
-        </Button>
+        <>
+          <s-button
+            slot="primary-action"
+            commandFor={getPauseModalId(contractId)}
+            command="--show"
+          >
+            {i18n.translate('subscriptionActions.pause')}
+          </s-button>
+          <PauseSubscriptionModal
+            contractId={contractId}
+            onPauseSubscription={onPauseSubscription}
+          />
+        </>
       ) : null}
       {status === 'PAUSED' ? (
-        <Button
-          overlay={
-            <ResumeSubscriptionModal
-              contractId={contractId}
-              resumeDate={nextBillingDate}
-              lastOrderPrice={lastOrderPrice}
-              nextOrderPrice={nextOrderPrice}
-              onResumeSubscription={onResumeSubscription}
-            />
-          }
-        >
-          <Text>{i18n.translate('subscriptionActions.resume')}</Text>
-        </Button>
-      ) : null}
-      <Button
-        overlay={
-          <CancelSubscriptionModal
+        <>
+          <s-button
+            slot="primary-action"
+            commandFor={getResumeModalId(contractId)}
+            command="--show"
+          >
+            {i18n.translate('subscriptionActions.resume')}
+          </s-button>
+          <ResumeSubscriptionModal
             contractId={contractId}
-            onCancelSubscription={onCancelSubscription}
+            resumeDate={nextBillingDate}
+            lastOrderPrice={lastOrderPrice}
+            nextOrderPrice={nextOrderPrice}
+            onResumeSubscription={onResumeSubscription}
           />
-        }
+        </>
+      ) : null}
+      <s-button
+        slot="secondary-actions"
+        commandFor={getCancelModalId(contractId)}
+        command="--show"
       >
-        <Text>{i18n.translate('cancel')}</Text>
-      </Button>
+        {i18n.translate('cancel')}
+      </s-button>
+      <CancelSubscriptionModal
+        contractId={contractId}
+        onCancelSubscription={onCancelSubscription}
+      />
     </>
   );
 }

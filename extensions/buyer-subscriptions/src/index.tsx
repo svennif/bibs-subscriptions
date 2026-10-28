@@ -1,9 +1,12 @@
-import {reactExtension} from '@shopify/ui-extensions-react/customer-account';
+import '@shopify/ui-extensions/preact';
+import {render} from 'preact';
 
 import {Router} from './App';
 import {ErrorBoundary} from 'foundation/ErrorBoundary';
 
-export default reactExtension('customer-account.page.render', () => <App />);
+export default async () => {
+  render(<App />, document.body);
+};
 
 function App() {
   return (

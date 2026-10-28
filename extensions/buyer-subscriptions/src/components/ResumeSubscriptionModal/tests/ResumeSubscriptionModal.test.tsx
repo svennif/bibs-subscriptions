@@ -1,16 +1,19 @@
 import {mockApis} from 'tests/mocks/api';
 import {mockUiExtensionComponents} from 'tests/mocks/components';
-import {mountWithAppContext} from 'tests/utilities';
-import {screen, waitFor} from '@testing-library/react';
+import {
+  clickButton,
+  getButton,
+  mountWithAppContext,
+  queryByHeading,
+} from 'tests/utilities';
+import {screen, waitFor} from '@testing-library/preact';
 
 import type {SubscriptionContractSubscriptionStatus} from 'generatedTypes/customer.types';
 
 import {
-  RESUME_MODAL_ID,
+  getResumeModalId,
   ResumeSubscriptionModal,
 } from '../ResumeSubscriptionModal';
-import {clickCloseButton} from 'src/SubscriptionList/components/SubscriptionListItem/tests/TestActions';
-import userEvent from '@testing-library/user-event';
 
 const {mockExtensionApi, mockCustomerApiGraphQL, mockAppRequest} = mockApis();
 
@@ -28,18 +31,29 @@ const defaultProps = {
   onResumeSubscription: vi.fn(),
 };
 
+const RESUME_MODAL_ID = getResumeModalId(defaultProps.contractId);
+
 describe('<ResumeSubscriptionModal />', () => {
+  let overlays: ReturnType<typeof mockUiExtensionComponents>;
+
   beforeEach(() => {
     mockExtensionApi();
-    mockUiExtensionComponents();
+    overlays = mockUiExtensionComponents();
   });
 
   it('renders', async () => {
     await mountWithAppContext(<ResumeSubscriptionModal {...defaultProps} />);
 
-    expect(screen.getByTitle('Resume subscription')).toBeInTheDocument();
-    expect(screen.getByRole('button', {name: 'Continue'})).toBeInTheDocument();
-    expect(screen.getByRole('button', {name: 'Close'})).toBeInTheDocument();
+    expect(queryByHeading('Resume subscription')).toBeInTheDocument();
+    expect(getButton('Continue')).toBeInTheDocument();
+    expect(getButton('Close')).toBeInTheDocument();
+  });
+
+  it('uses a modal id that is unique to the contract', async () => {
+    await mountWithAppContext(<ResumeSubscriptionModal {...defaultProps} />);
+
+    expect(document.getElementById(RESUME_MODAL_ID)?.tagName).toBe('S-MODAL');
+    expect(RESUME_MODAL_ID).toBe('resume-subscription-modal-1');
   });
 
   it('renders with resume date when passed', async () => {
@@ -111,23 +125,18 @@ describe('<ResumeSubscriptionModal />', () => {
     expect(screen.queryByText('$10.00')).not.toBeInTheDocument();
   });
 
-  it('closes the modal when close button is clicked', async () => {
-    const overlayCloseSpy = vi.fn();
-    mockExtensionApi({mocks: {closeOverlay: overlayCloseSpy}});
-
+  it('closes the modal from the close button', async () => {
     await mountWithAppContext(<ResumeSubscriptionModal {...defaultProps} />);
 
-    await clickCloseButton();
-
-    expect(overlayCloseSpy).toHaveBeenCalledWith(RESUME_MODAL_ID);
+    const closeButton = getButton('Close');
+    expect(closeButton).toHaveAttribute('command', '--hide');
+    expect(closeButton).toHaveAttribute('commandFor', RESUME_MODAL_ID);
   });
 
-  it('calls onResumeSubscription, onClose and sends a request to the app after successfully activating a contract', async () => {
-    const overlayCloseSpy = vi.fn();
+  it('calls onResumeSubscription, closes the modal and sends a request to the app after successfully activating a contract', async () => {
     const onResumeSpy = vi.fn();
     const appRequestSpy = vi.fn();
 
-    mockExtensionApi({mocks: {closeOverlay: overlayCloseSpy}});
     mockActivateSubscriptionMutation({success: true});
     mockAppRequest(appRequestSpy);
 
@@ -138,9 +147,9 @@ describe('<ResumeSubscriptionModal />', () => {
       />,
     );
 
-    await clickContinueButton();
+    await clickButton('Continue');
 
-    expect(overlayCloseSpy).toHaveBeenCalledWith(RESUME_MODAL_ID);
+    expect(overlays.hiddenOverlayIds()).toEqual([RESUME_MODAL_ID]);
     expect(onResumeSpy).toHaveBeenCalled();
     expect(appRequestSpy).toHaveBeenCalledWith({
       operationName: 'RESUME',
@@ -148,12 +157,10 @@ describe('<ResumeSubscriptionModal />', () => {
     });
   });
 
-  it('does not call onClose or onResumeSubscription or send a request to the app after failing to activate a contract', async () => {
-    const overlayCloseSpy = vi.fn();
+  it('does not close the modal, call onResumeSubscription or send a request to the app after failing to activate a contract', async () => {
     const onResumeSpy = vi.fn();
     const appRequestSpy = vi.fn();
 
-    mockExtensionApi({mocks: {closeOverlay: overlayCloseSpy}});
     mockAppRequest(appRequestSpy);
     mockActivateSubscriptionMutation({success: false});
 
@@ -164,9 +171,9 @@ describe('<ResumeSubscriptionModal />', () => {
       />,
     );
 
-    await clickContinueButton();
+    await clickButton('Continue');
 
-    expect(overlayCloseSpy).not.toHaveBeenCalled();
+    expect(overlays.hideOverlay).not.toHaveBeenCalled();
     expect(onResumeSpy).not.toHaveBeenCalled();
     expect(appRequestSpy).not.toHaveBeenCalled();
   });
@@ -176,7 +183,7 @@ describe('<ResumeSubscriptionModal />', () => {
     await mountWithAppContext(<ResumeSubscriptionModal {...defaultProps} />);
 
     expect(
-      screen.queryByTitle('Unable to resume subscription'),
+      queryByHeading('Unable to resume subscription'),
     ).not.toBeInTheDocument();
   });
 
@@ -185,20 +192,15 @@ describe('<ResumeSubscriptionModal />', () => {
 
     await mountWithAppContext(<ResumeSubscriptionModal {...defaultProps} />);
 
-    await clickContinueButton();
+    await clickButton('Continue');
 
     await waitFor(() => {
       expect(
-        screen.getByTitle('Unable to resume subscription'),
+        queryByHeading('Unable to resume subscription'),
       ).toBeInTheDocument();
     });
   });
 });
-
-async function clickContinueButton() {
-  const continueButton = screen.getByRole('button', {name: 'Continue'});
-  await userEvent.click(continueButton);
-}
 
 function mockActivateSubscriptionMutation({
   success = true,

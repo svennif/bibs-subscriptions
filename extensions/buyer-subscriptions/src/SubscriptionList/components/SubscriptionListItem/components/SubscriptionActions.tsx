@@ -1,13 +1,11 @@
 import {
-  Button,
-  View,
-  Text,
-} from '@shopify/ui-extensions-react/customer-account';
-import {
   PauseSubscriptionModal,
   SkipNextOrderModal,
   ResumeSubscriptionModal,
 } from 'components';
+import {getPauseModalId} from 'components/PauseSubscriptionModal';
+import {getSkipNextOrderModalId} from 'components/SkipNextOrderModal';
+import {getResumeModalId} from 'components/ResumeSubscriptionModal';
 import {useExtensionApi} from 'foundation/Api';
 import type {Money, SubscriptionStatus} from 'types';
 import {parseGid} from '@shopify/admin-graphql-api-utilities';
@@ -24,7 +22,9 @@ export interface SubscriptionActionsProps {
   refetchSubscriptionListData: () => void;
 }
 
-export const SUBSCRIPTION_ACTIONS_POPOVER_ID = 'subscription-actions-popover';
+export function getSubscriptionActionsMenuId(contractId: string) {
+  return `subscription-actions-menu-${parseGid(contractId)}`;
+}
 
 export function SubscriptionActions({
   id,
@@ -36,114 +36,90 @@ export function SubscriptionActions({
   nextOrderPrice,
   refetchSubscriptionListData,
 }: SubscriptionActionsProps) {
-  const {
-    i18n,
-    ui: {overlay},
-  } = useExtensionApi();
+  const {i18n} = useExtensionApi();
 
   const {showSuccessToast} = useToast();
 
   const subscriptionDetailsUrl = `extension:/subscriptions/${parseGid(id)}`;
+  const menuId = getSubscriptionActionsMenuId(id);
+
+  const viewDetailsButton = (
+    <s-button variant="secondary" href={subscriptionDetailsUrl}>
+      {i18n.translate('subscriptionActions.viewSubscriptionDetails')}
+    </s-button>
+  );
 
   if (!['ACTIVE', 'PAUSED'].includes(status)) {
-    return (
-      <Button
-        kind="secondary"
-        appearance="monochrome"
-        to={subscriptionDetailsUrl}
-      >
-        <Text>
-          {i18n.translate('subscriptionActions.viewSubscriptionDetails')}
-        </Text>
-      </Button>
-    );
+    return viewDetailsButton;
   }
 
   function onSkipOrder() {
     showSuccessToast(SuccessToastType.Skipped);
-    overlay.close(SUBSCRIPTION_ACTIONS_POPOVER_ID);
     refetchSubscriptionListData();
   }
 
   function onPauseSubscription() {
     showSuccessToast(SuccessToastType.Paused);
     refetchSubscriptionListData();
-    overlay.close(SUBSCRIPTION_ACTIONS_POPOVER_ID);
   }
 
   function onResumeSubscription() {
     showSuccessToast(SuccessToastType.Resumed);
     refetchSubscriptionListData();
-    overlay.close(SUBSCRIPTION_ACTIONS_POPOVER_ID);
   }
 
-  function skipButton() {
-    return cycleIndexToSkip && resumeDateIfNextCycleSkipped ? (
-      <Button
-        overlay={
-          <SkipNextOrderModal
-            contractId={id}
-            onSkipOrder={onSkipOrder}
-            resumeDate={resumeDateIfNextCycleSkipped}
-            cycleIndexToSkip={cycleIndexToSkip}
-          />
-        }
-      >
-        <View blockAlignment="center" padding="base">
-          <Text>{i18n.translate('subscriptionActions.skip')}</Text>
-        </View>
-      </Button>
-    ) : null;
-  }
+  const canSkip = Boolean(cycleIndexToSkip && resumeDateIfNextCycleSkipped);
 
   return (
     <>
-      {/* PrimaryAction - View Subscription Details  */}
-      <Button
-        kind="secondary"
-        appearance="monochrome"
-        to={subscriptionDetailsUrl}
+      <s-stack direction="inline" gap="small">
+        {viewDetailsButton}
+        <s-button variant="secondary" commandFor={menuId}>
+          {i18n.translate('subscriptionActions.manage')}
+        </s-button>
+      </s-stack>
+      <s-menu
+        id={menuId}
+        accessibilityLabel={i18n.translate('subscriptionActions.manage')}
       >
-        <View blockAlignment="center" padding="base">
-          <Text>
-            {i18n.translate('subscriptionActions.viewSubscriptionDetails')}
-          </Text>
-        </View>
-      </Button>
-      {/* SecondaryAction Grouping */}
+        {status === 'ACTIVE' && canSkip ? (
+          <s-button command="--show" commandFor={getSkipNextOrderModalId(id)}>
+            {i18n.translate('subscriptionActions.skip')}
+          </s-button>
+        ) : null}
+        {status === 'ACTIVE' ? (
+          <s-button command="--show" commandFor={getPauseModalId(id)}>
+            {i18n.translate('subscriptionActions.pause')}
+          </s-button>
+        ) : null}
+        {status === 'PAUSED' ? (
+          <s-button command="--show" commandFor={getResumeModalId(id)}>
+            {i18n.translate('subscriptionActions.resume')}
+          </s-button>
+        ) : null}
+      </s-menu>
+      {status === 'ACTIVE' && canSkip ? (
+        <SkipNextOrderModal
+          contractId={id}
+          onSkipOrder={onSkipOrder}
+          resumeDate={resumeDateIfNextCycleSkipped!}
+          cycleIndexToSkip={cycleIndexToSkip!}
+        />
+      ) : null}
       {status === 'ACTIVE' ? (
-        <>
-          {skipButton()}
-          <Button
-            overlay={
-              <PauseSubscriptionModal
-                contractId={id}
-                onPauseSubscription={onPauseSubscription}
-              />
-            }
-          >
-            <View blockAlignment="center" padding="base">
-              <Text>{i18n.translate('subscriptionActions.pause')}</Text>
-            </View>
-          </Button>
-        </>
+        <PauseSubscriptionModal
+          contractId={id}
+          onPauseSubscription={onPauseSubscription}
+        />
       ) : null}
       {status === 'PAUSED' ? (
-        <Button
-          overlay={
-            <ResumeSubscriptionModal
-              contractId={id}
-              resumeDate={resumeDate}
-              lastOrderPrice={lastOrderPrice}
-              nextOrderPrice={nextOrderPrice}
-              onResumeSubscription={onResumeSubscription}
-            />
-          }
-        >
-          <View blockAlignment="center" padding="base">
-            <Text>{i18n.translate('subscriptionActions.resume')}</Text>
-          </View>
-        </Button>
+        <ResumeSubscriptionModal
+          contractId={id}
+          resumeDate={resumeDate}
+          lastOrderPrice={lastOrderPrice}
+          nextOrderPrice={nextOrderPrice}
+          onResumeSubscription={onResumeSubscription}
+        />
       ) : null}
     </>
   );

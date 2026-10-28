@@ -1,13 +1,5 @@
-import {useState} from 'react';
-import {
-  Button,
-  Banner,
-  InlineLayout,
-  InlineSpacer,
-  Modal,
-  TextBlock,
-  BlockStack,
-} from '@shopify/ui-extensions-react/customer-account';
+import {useRef, useState} from 'preact/hooks';
+import {parseGid} from '@shopify/admin-graphql-api-utilities';
 
 import type {
   PauseSubscriptionContractMutation as PauseSubscriptionContractMutationData,
@@ -21,17 +13,18 @@ interface PauseSubscriptionModalProps {
   onPauseSubscription: () => void;
 }
 
-export const PAUSE_MODAL_ID = 'pause-subscription-modal';
+export function getPauseModalId(contractId: string) {
+  return `pause-subscription-modal-${parseGid(contractId)}`;
+}
 
 export function PauseSubscriptionModal({
   contractId,
   onPauseSubscription,
 }: PauseSubscriptionModalProps) {
+  const modalId = getPauseModalId(contractId);
+  const modalRef = useRef<HTMLElementTagNameMap['s-modal']>(null);
   const [loading, setLoading] = useState(false);
-  const {
-    i18n,
-    ui: {overlay},
-  } = useExtensionApi();
+  const {i18n} = useExtensionApi();
   const sendRequest = useAppRequest();
   const [error, setError] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | undefined>();
@@ -70,41 +63,49 @@ export function PauseSubscriptionModal({
 
     setLoading(false);
     clearErrorState();
-    overlay.close(PAUSE_MODAL_ID);
+    modalRef.current?.hideOverlay();
 
     onPauseSubscription();
     sendRequest({contractId, operationName: 'PAUSE'});
   }
 
   return (
-    <Modal
-      padding
-      title={i18n.translate('pauseSubscriptionModal.title')}
-      onClose={clearErrorState}
-      id={PAUSE_MODAL_ID}
+    <s-modal
+      ref={modalRef}
+      id={modalId}
+      heading={i18n.translate('pauseSubscriptionModal.title')}
+      padding="base"
+      onHide={clearErrorState}
     >
-      <BlockStack spacing="loose">
+      <s-stack gap="large">
         {error ? (
-          <Banner
-            status="critical"
-            title={i18n.translate('pauseSubscriptionModal.errorBannerTitle')}
+          <s-banner
+            tone="critical"
+            heading={i18n.translate('pauseSubscriptionModal.errorBannerTitle')}
           >
             {errorMessage}
-          </Banner>
+          </s-banner>
         ) : null}
-        <TextBlock>
+        <s-paragraph>
           {i18n.translate('pauseSubscriptionModal.description')}
-        </TextBlock>
-        <InlineLayout spacing="loose" columns={['fill', 'auto', 'auto']}>
-          <InlineSpacer />
-          <Button onPress={() => overlay.close(PAUSE_MODAL_ID)} kind="plain">
-            {i18n.translate('close')}
-          </Button>
-          <Button onPress={handlePauseSubscription} loading={loading}>
-            {i18n.translate('pauseSubscriptionModal.action')}
-          </Button>
-        </InlineLayout>
-      </BlockStack>
-    </Modal>
+        </s-paragraph>
+      </s-stack>
+      <s-button
+        slot="secondary-actions"
+        variant="secondary"
+        command="--hide"
+        commandFor={modalId}
+      >
+        {i18n.translate('close')}
+      </s-button>
+      <s-button
+        slot="primary-action"
+        variant="primary"
+        loading={loading}
+        onClick={handlePauseSubscription}
+      >
+        {i18n.translate('pauseSubscriptionModal.action')}
+      </s-button>
+    </s-modal>
   );
 }

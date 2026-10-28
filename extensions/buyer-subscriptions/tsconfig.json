@@ -11,28 +11,53 @@
     "../../env.d.ts",
     "../shared"
   ],
-  "exclude": ["build", "public", "node_modules/**/*"],
+  "exclude": [
+    "build",
+    "public",
+    "node_modules/**/*"
+  ],
   "compilerOptions": {
     "target": "ES2022",
     "outDir": "./build",
     "baseUrl": "./",
     "types": [
-      "@shopify/react-testing/matchers",
       "vitest/globals",
       "@testing-library/jest-dom"
     ],
     "paths": {
-      "types": ["src/types"],
-      "generatedTypes/*": ["types/*"],
-      "foundation/*": ["src/foundation/*"],
-      "tests/*": ["tests/*"],
-      "mocks/*": ["tests/mocks/*"],
-      "customer-types": ["src/types"],
-      "utilities": ["src/utilities"],
-      "utilities/*": ["src/utilities/*"],
-      "components": ["src/components"],
-      "components/*": ["src/components/*"]
+      "types": [
+        "src/types"
+      ],
+      "generatedTypes/*": [
+        "types/*"
+      ],
+      "foundation/*": [
+        "src/foundation/*"
+      ],
+      "tests/*": [
+        "tests/*"
+      ],
+      "mocks/*": [
+        "tests/mocks/*"
+      ],
+      "customer-types": [
+        "src/types"
+      ],
+      "utilities": [
+        "src/utilities"
+      ],
+      "utilities/*": [
+        "src/utilities/*"
+      ],
+      "components": [
+        "src/components"
+      ],
+      "components/*": [
+        "src/components/*"
+      ]
     },
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "jsx": "react-jsx",
+    "jsxImportSource": "preact"
   }
 }

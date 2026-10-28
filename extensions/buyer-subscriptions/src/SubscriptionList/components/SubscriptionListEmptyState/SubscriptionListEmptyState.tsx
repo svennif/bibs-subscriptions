@@ -1,23 +1,16 @@
-import {
-  Card,
-  Text,
-  BlockStack,
-  Heading,
-  Page,
-} from '@shopify/ui-extensions-react/customer-account';
 import {useExtensionApi} from 'foundation/Api';
 
 export function SubscriptionListEmptyState() {
   const {i18n} = useExtensionApi();
 
   return (
-    <Page title={i18n.translate('subscriptions')}>
-      <Card padding>
-        <BlockStack inlineAlignment="center">
-          <Heading level={2}>{i18n.translate('emptyState.title')}</Heading>
-          <Text>{i18n.translate('emptyState.description')}</Text>
-        </BlockStack>
-      </Card>
-    </Page>
+    <s-page heading={i18n.translate('subscriptions')}>
+      <s-section>
+        <s-stack alignItems="center" gap="base">
+          <s-heading>{i18n.translate('emptyState.title')}</s-heading>
+          <s-text>{i18n.translate('emptyState.description')}</s-text>
+        </s-stack>
+      </s-section>
+    </s-page>
   );
 }

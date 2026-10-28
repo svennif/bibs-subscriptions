@@ -1,16 +1,3 @@
-import type {ComponentProps} from 'react';
-import {
-  View,
-  Grid,
-  Heading,
-  Text,
-  BlockStack,
-  Icon,
-  Image,
-  InlineStack,
-  ResourceItem,
-  ImageGroup,
-} from '@shopify/ui-extensions-react/customer-account';
 import {
   BillingCycle,
   DeliveryPolicy,
@@ -45,16 +32,16 @@ export interface SubscriptionListItemProps {
   refetchSubscriptionListData: () => void;
 }
 
-type IconSource = ComponentProps<typeof Icon>['source'];
+type IconType = NonNullable<HTMLElementTagNameMap['s-icon']['type']>;
 const statusIcon: {
-  [key in SubscriptionStatus]: IconSource;
+  [key in SubscriptionStatus]: IconType;
 } = {
   ACTIVE: 'reorder',
   PAUSED: 'disabled',
-  CANCELLED: 'error',
-  EXPIRED: 'error',
-  FAILED: 'error',
-  STALE: 'error',
+  CANCELLED: 'alert-circle',
+  EXPIRED: 'alert-circle',
+  FAILED: 'alert-circle',
+  STALE: 'alert-circle',
 };
 
 export function SubscriptionListItem({
@@ -108,76 +95,75 @@ export function SubscriptionListItem({
   })();
 
   return (
-    <View>
-      <ResourceItem
-        to={`extension:/subscriptions/${parseGid(id)}`}
-        actionLabel={i18n.translate('subscriptionActions.manage')}
-        accessibilityLabel={accessibilityLabel}
-        action={
-          <SubscriptionActions
-            id={id}
-            status={status}
-            cycleIndexToSkip={cycleIndexToSkip}
-            refetchSubscriptionListData={refetchSubscriptionListData}
-            resumeDate={nextBillingDate}
-            lastOrderPrice={lastOrderPrice}
-            nextOrderPrice={totalPrice}
-            resumeDateIfNextCycleSkipped={resumeDateIfNextCycleSkipped}
-          />
-        }
-      >
-        <BlockStack>
-          <View background="subdued" padding="loose" borderRadius="base">
-            <Grid columns={['auto', 'fill']} spacing="tight">
-              {hasInventoryError ? (
-                <Icon source="info" />
-              ) : (
-                <Icon source={statusIcon[status]} />
-              )}
-              <BlockStack spacing="none">
-                <Text emphasis="bold" size="small">
-                  {hasInventoryError
-                    ? i18n.translate('subscriptionStatus.pending')
-                    : i18n.translate(
-                        `subscriptionStatus.${status.toLowerCase()}`,
-                      )}
-                </Text>
-                <Text size="small">{nextOrderText}</Text>
-              </BlockStack>
-            </Grid>
-          </View>
-          <ImageGroup totalItems={1}>
-            {image?.url ? <Image source={image?.url} /> : null}
-          </ImageGroup>
-          <BlockStack spacing="extraTight">
-            <Heading level={3}>{title}</Heading>
-            <Text appearance="subdued">
-              {i18n.translate(
-                `deliveryInterval.${deliveryPolicy.interval.toLowerCase()}.${
-                  deliveryPolicy.intervalCount?.count === 1 ? 'one' : 'other'
-                }`,
-                deliveryPolicy.intervalCount?.count === 1
-                  ? undefined
-                  : {
-                      count: deliveryPolicy.intervalCount?.count,
-                    },
-              )}
-            </Text>
-            <View padding={['tight', 'none']}>
-              <InlineStack blockAlignment="center">
-                {totalPrice ? (
-                  <Heading level={3}>
+    <s-section accessibilityLabel={accessibilityLabel}>
+      <s-stack gap="base">
+        <s-clickable
+          href={`extension:/subscriptions/${parseGid(id)}`}
+          accessibilityLabel={accessibilityLabel}
+        >
+          <s-stack gap="base">
+            <s-box background="subdued" padding="large" borderRadius="base">
+              <s-grid
+                gridTemplateColumns="auto 1fr"
+                gap="small"
+                alignItems="center"
+              >
+                <s-icon type={hasInventoryError ? 'info' : statusIcon[status]} />
+                <s-stack gap="none">
+                  <s-text type="strong">
+                    {hasInventoryError
+                      ? i18n.translate('subscriptionStatus.pending')
+                      : i18n.translate(
+                          `subscriptionStatus.${status.toLowerCase()}`,
+                        )}
+                  </s-text>
+                  <s-text type="small">{nextOrderText}</s-text>
+                </s-stack>
+              </s-grid>
+            </s-box>
+            <s-image-group totalItems={1}>
+              {image?.url ? (
+                <s-image src={image.url} alt={image.altText ?? ''} />
+              ) : null}
+            </s-image-group>
+            <s-stack gap="small-300">
+              <s-heading>{title}</s-heading>
+              <s-text color="subdued">
+                {i18n.translate(
+                  `deliveryInterval.${deliveryPolicy.interval.toLowerCase()}.${
+                    deliveryPolicy.intervalCount?.count === 1 ? 'one' : 'other'
+                  }`,
+                  deliveryPolicy.intervalCount?.count === 1
+                    ? undefined
+                    : {
+                        count: deliveryPolicy.intervalCount?.count,
+                      },
+                )}
+              </s-text>
+              {totalPrice ? (
+                <s-box paddingBlock="small">
+                  <s-heading>
                     {i18n.formatCurrency(Number(totalPrice.amount), {
                       currency: totalPrice.currencyCode,
                       currencyDisplay: 'narrowSymbol',
                     })}
-                  </Heading>
-                ) : null}
-              </InlineStack>
-            </View>
-          </BlockStack>
-        </BlockStack>
-      </ResourceItem>
-    </View>
+                  </s-heading>
+                </s-box>
+              ) : null}
+            </s-stack>
+          </s-stack>
+        </s-clickable>
+        <SubscriptionActions
+          id={id}
+          status={status}
+          cycleIndexToSkip={cycleIndexToSkip}
+          refetchSubscriptionListData={refetchSubscriptionListData}
+          resumeDate={nextBillingDate}
+          lastOrderPrice={lastOrderPrice}
+          nextOrderPrice={totalPrice}
+          resumeDateIfNextCycleSkipped={resumeDateIfNextCycleSkipped}
+        />
+      </s-stack>
+    </s-section>
   );
 }

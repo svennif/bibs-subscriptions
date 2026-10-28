@@ -1,14 +1,12 @@
 import type {Address} from '@shopify/address';
-import type {TextProps} from '@shopify/ui-extensions-react/customer-account';
-import {Text} from '@shopify/ui-extensions-react/customer-account';
 import {useFormattedAddress} from 'components/Address';
 
 export interface InlineAddressProps {
   address: Address;
-  appearance: TextProps['appearance'];
+  color?: 'base' | 'subdued';
 }
 
-export function InlineAddress({address, appearance}: InlineAddressProps) {
+export function InlineAddress({address, color}: InlineAddressProps) {
   const formattedAddress = useFormattedAddress(address);
   const inlineAddress = formattedAddress?.join(', ');
 
@@ -16,5 +14,5 @@ export function InlineAddress({address, appearance}: InlineAddressProps) {
     return null;
   }
 
-  return <Text appearance={appearance}>{inlineAddress}</Text>;
+  return <s-text color={color}>{inlineAddress}</s-text>;
 }

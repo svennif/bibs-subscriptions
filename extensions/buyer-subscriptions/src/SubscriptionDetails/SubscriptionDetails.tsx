@@ -1,15 +1,3 @@
-import {
-  BlockStack,
-  Grid,
-  GridItem,
-  Button,
-  Card,
-  SkeletonTextBlock,
-  View,
-  Style,
-  Page,
-  Banner,
-} from '@shopify/ui-extensions-react/customer-account';
 import {getBillingCycleInfo} from 'utilities';
 
 import {useSubscriptionContract} from './hooks/useSubscriptionContract';
@@ -20,6 +8,7 @@ import {
   PriceSummaryCard,
   NotFound,
 } from './components';
+import {OverviewCardDeliveryModal} from './components/OverviewCard';
 import {useExtensionApi} from 'foundation/Api';
 import {BillingAttemptErrorType} from 'types';
 import {useToast, SuccessToastType} from 'utilities/hooks/useToast';
@@ -28,6 +17,11 @@ import {DetailsActions} from './DetailsActions';
 interface SubscriptionDetailsProps {
   id: string;
 }
+
+// Two columns from the "medium" breakpoint of the previous layout
+const GRID_COLUMNS = '@container (inline-size > 750px) 7fr 5fr, 1fr';
+const SHOW_WHEN_WIDE = '@container (inline-size > 750px) auto, none';
+const SHOW_WHEN_NARROW = '@container (inline-size > 750px) none, auto';
 
 export function SubscriptionDetails({id}: SubscriptionDetailsProps) {
   const {data, loading, error, refetchSubscriptionContract, refetchLoading} =
@@ -78,6 +72,8 @@ export function SubscriptionDetails({id}: SubscriptionDetailsProps) {
       ? i18n.translate('subscriptionDetails')
       : i18n.translate('manageSubscription');
 
+  // The overview card is rendered twice and shown depending on the available
+  // width, so its delivery modal is rendered once below instead.
   const overviewCard = (
     <OverviewCard
       contractId={contractId}
@@ -87,56 +83,28 @@ export function SubscriptionDetails({id}: SubscriptionDetailsProps) {
       pickupAddress={pickupAddress}
       status={status}
       refetchSubscriptionContract={refetchSubscriptionContract}
+      renderDeliveryModal={false}
     />
   );
 
   return (
-    <Page
-      title={pageTitle}
-      secondaryAction={
-        <Button
-          to="extension:/"
-          accessibilityLabel="Go back to subscription list"
-        />
-      }
-      primaryAction={
-        <DetailsActions
-          contractId={contractId}
-          status={status}
-          refetchSubscriptionContract={refetchSubscriptionContract}
-          lastOrderPrice={lastOrderPrice}
-          nextOrderPrice={priceBreakdownEstimate?.totalPrice}
-          nextBillingDate={nextBillingDate}
-        />
-      }
-    >
-      <Grid
-        columns={Style.default(['fill'])
-          .when({viewportInlineSize: {min: 'medium'}}, ['fill', 'fill'])
-          .when({viewportInlineSize: {min: 'large'}}, [
-            'fill',
-            'fill',
-            'fill',
-            'fill',
-            'fill',
-            'fill',
-            'fill',
-            'fill',
-            'fill',
-            'fill',
-            'fill',
-            'fill',
-          ])}
-        rows="auto"
-        spacing={['loose', 'loose']}
-      >
-        <GridItem
-          columnSpan={Style.default(1).when(
-            {viewportInlineSize: {min: 'large'}},
-            7,
-          )}
-        >
-          <BlockStack spacing="loose">
+    <s-page heading={pageTitle}>
+      <s-button
+        slot="breadcrumb-actions"
+        href="extension:/"
+        accessibilityLabel="Go back to subscription list"
+      />
+      <DetailsActions
+        contractId={contractId}
+        status={status}
+        refetchSubscriptionContract={refetchSubscriptionContract}
+        lastOrderPrice={lastOrderPrice}
+        nextOrderPrice={priceBreakdownEstimate?.totalPrice}
+        nextBillingDate={nextBillingDate}
+      />
+      <s-query-container>
+        <s-grid gridTemplateColumns={GRID_COLUMNS} gap="large">
+          <s-stack gap="large">
             {status === 'ACTIVE' || hasInventoryError ? (
               <UpcomingOrderCard
                 onSkipOrder={onSkipOrder}
@@ -147,108 +115,56 @@ export function SubscriptionDetails({id}: SubscriptionDetailsProps) {
                 hasInventoryError={hasInventoryError}
               />
             ) : null}
-            <View
-              display={Style.default('none').when(
-                {viewportInlineSize: {min: 'medium'}},
-                'auto',
-              )}
-            >
-              {overviewCard}
-            </View>
-          </BlockStack>
-        </GridItem>
-        <GridItem
-          columnSpan={Style.default(1).when(
-            {viewportInlineSize: {min: 'large'}},
-            5,
-          )}
-        >
-          <BlockStack spacing="loose">
+            <s-box display={SHOW_WHEN_WIDE}>{overviewCard}</s-box>
+          </s-stack>
+          <s-stack gap="large">
             {priceBreakdownEstimate ? (
               <PriceSummaryCard price={priceBreakdownEstimate} lines={lines} />
             ) : null}
-            <View
-              display={Style.default('auto').when(
-                {viewportInlineSize: {min: 'medium'}},
-                'none',
-              )}
-            >
-              {overviewCard}
-            </View>
+            <s-box display={SHOW_WHEN_NARROW}>{overviewCard}</s-box>
             <PastOrdersCard orders={orders} />
-          </BlockStack>
-        </GridItem>
-      </Grid>
-    </Page>
+          </s-stack>
+        </s-grid>
+      </s-query-container>
+      <OverviewCardDeliveryModal
+        contractId={contractId}
+        shippingAddress={shippingAddress}
+        pickupAddress={pickupAddress}
+        status={status}
+        refetchSubscriptionContract={refetchSubscriptionContract}
+      />
+    </s-page>
   );
 }
 
 function SubscriptionDetailsSkeleton() {
   return (
-    <Page title="" loading secondaryAction={<Button to="loading" />}>
-      <Grid
-        columns={Style.default(['fill'])
-          .when({viewportInlineSize: {min: 'medium'}}, ['fill', 'fill'])
-          .when({viewportInlineSize: {min: 'large'}}, [
-            'fill',
-            'fill',
-            'fill',
-            'fill',
-            'fill',
-            'fill',
-            'fill',
-            'fill',
-            'fill',
-            'fill',
-            'fill',
-            'fill',
-          ])}
-        spacing={['loose', 'loose']}
-      >
-        <GridItem
-          columnSpan={Style.default(1).when(
-            {viewportInlineSize: {min: 'large'}},
-            7,
-          )}
-        >
-          <BlockStack spacing="loose">
-            <Card padding>
-              <View>
-                <SkeletonTextBlock />
-              </View>
-            </Card>
-            <Card padding>
-              <View>
-                <SkeletonTextBlock />
-                <SkeletonTextBlock />
-                <SkeletonTextBlock />
-              </View>
-            </Card>
-          </BlockStack>
-        </GridItem>
-        <GridItem
-          columnSpan={Style.default(1).when(
-            {viewportInlineSize: {min: 'large'}},
-            5,
-          )}
-        >
-          <BlockStack spacing="loose">
-            <Card padding>
-              <View>
-                <SkeletonTextBlock />
-                <SkeletonTextBlock />
-              </View>
-            </Card>
-            <Card padding>
-              <View>
-                <SkeletonTextBlock />
-                <SkeletonTextBlock />
-              </View>
-            </Card>
-          </BlockStack>
-        </GridItem>
-      </Grid>
-    </Page>
+    <s-page heading="">
+      <s-query-container>
+        <s-grid gridTemplateColumns={GRID_COLUMNS} gap="large">
+          <s-stack gap="large">
+            <s-section>
+              <s-skeleton-paragraph />
+            </s-section>
+            <s-section>
+              <s-skeleton-paragraph />
+              <s-skeleton-paragraph />
+              <s-skeleton-paragraph />
+            </s-section>
+          </s-stack>
+          <s-stack gap="large">
+            <s-section>
+              <s-skeleton-paragraph />
+              <s-skeleton-paragraph />
+            </s-section>
+            <s-section>
+              <s-skeleton-paragraph />
+              <s-skeleton-paragraph />
+            </s-section>
+          </s-stack>
+        </s-grid>
+      </s-query-container>
+    </s-page>
   );
 }
 
@@ -256,8 +172,8 @@ function SubscriptionDetailsErrorState() {
   const {i18n} = useExtensionApi();
 
   return (
-    <Banner status="critical">
+    <s-banner tone="critical">
       {i18n.translate('subscriptionDetailsError')}
-    </Banner>
+    </s-banner>
   );
 }

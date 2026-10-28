@@ -1,13 +1,4 @@
-import {useCallback, useMemo} from 'react';
-import {
-  BlockStack,
-  InlineStack,
-  InlineLayout,
-  Button,
-  SkeletonText,
-  SkeletonTextBlock,
-  Banner,
-} from '@shopify/ui-extensions-react/customer-account';
+import {useMemo} from 'preact/hooks';
 
 import type {Address as AddressType, FieldName} from '@shopify/address';
 import {buildOrderedFields} from '@shopify/address';
@@ -16,7 +7,6 @@ import type {UserError} from 'types';
 import {useCountries} from '../../hooks/useCountries';
 import {AddressLine} from '../AddressLine';
 import {formatUserErrorsForFields} from '../../utilities/helpers';
-import {DELIVERY_MODAL_ID} from '../../types';
 import {useExtensionApi} from 'foundation/Api';
 
 interface AddressModalProps {
@@ -29,6 +19,10 @@ interface AddressModalProps {
   onSave: () => Promise<void>;
 }
 
+/**
+ * The address step of the delivery modal. Renders its fields and its
+ * slotted actions as direct children of the parent s-modal.
+ */
 export function AddressModal({
   address,
   addressModalOpen,
@@ -38,10 +32,7 @@ export function AddressModal({
   onClose,
   onSave,
 }: AddressModalProps) {
-  const {
-    i18n,
-    ui: {overlay},
-  } = useExtensionApi();
+  const {i18n} = useExtensionApi();
 
   const errorMessageDisplay = useMemo(
     () => errors.map(({message}) => message).join('\n'),
@@ -60,24 +51,14 @@ export function AddressModal({
     [countries],
   );
 
-  const onModalClose = useCallback(() => {
-    onClose();
-    overlay.close(DELIVERY_MODAL_ID);
-  }, [onClose, overlay]);
-
   if (countriesLoading) {
     return (
-      <>
-        <BlockStack spacing="loose" data-testid="address-modal-loading-state">
-          {new Array(4).fill(0).map((_, index) => (
-            // eslint-disable-next-line react/no-array-index-key
-            <BlockStack spacing="tight" key={index}>
-              <SkeletonText inlineSize="small" />
-              <SkeletonTextBlock />
-            </BlockStack>
-          ))}
-        </BlockStack>
-      </>
+      <s-stack gap="large" data-testid="address-modal-loading-state">
+        {new Array(4).fill(0).map((_, index) => (
+          // eslint-disable-next-line react/no-array-index-key
+          <s-skeleton-paragraph key={index} />
+        ))}
+      </s-stack>
     );
   }
 
@@ -102,42 +83,40 @@ export function AddressModal({
 
   return (
     <>
-      <BlockStack>
+      <s-stack gap="base">
         {errorMessageDisplay ? (
-          <Banner status="critical" title={errorMessageDisplay} />
+          <s-banner tone="critical" heading={errorMessageDisplay} />
         ) : null}
-        <BlockStack>
-          {orderedFields.map((line, index) => {
-            return (
-              <AddressLine
-                // eslint-disable-next-line react/no-array-index-key
-                i18n={i18n}
-                key={`$line-${index}`}
-                line={line}
-                countries={countries}
-                country={currentCountry ?? null}
-                address={address}
-                countrySelectOptions={countrySelectOptions}
-                zoneSelectOptions={zoneSelectOptions}
-                onChange={handleAddressChange}
-                formErrors={formatUserErrorsForFields([])}
-                disabled={loading}
-              />
-            );
-          })}
-          <InlineLayout inlineAlignment="end" columns={['fill']}>
-            <></>
-            <InlineStack blockAlignment="center">
-              <Button kind="plain" onPress={onModalClose}>
-                {i18n.translate('cancel')}
-              </Button>
-              <Button onPress={onSave} loading={loading}>
-                {i18n.translate('addressModal.continue')}
-              </Button>
-            </InlineStack>
-          </InlineLayout>
-        </BlockStack>
-      </BlockStack>
+        {orderedFields.map((line, index) => {
+          return (
+            <AddressLine
+              i18n={i18n}
+              // eslint-disable-next-line react/no-array-index-key
+              key={`$line-${index}`}
+              line={line}
+              countries={countries}
+              country={currentCountry ?? null}
+              address={address}
+              countrySelectOptions={countrySelectOptions}
+              zoneSelectOptions={zoneSelectOptions}
+              onChange={handleAddressChange}
+              formErrors={formatUserErrorsForFields([])}
+              disabled={loading}
+            />
+          );
+        })}
+      </s-stack>
+      <s-button slot="secondary-actions" variant="secondary" onClick={onClose}>
+        {i18n.translate('cancel')}
+      </s-button>
+      <s-button
+        slot="primary-action"
+        variant="primary"
+        onClick={onSave}
+        loading={loading}
+      >
+        {i18n.translate('addressModal.continue')}
+      </s-button>
     </>
   );
 }

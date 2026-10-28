@@ -1,6 +1,6 @@
 import {mockApis} from 'tests/mocks/api';
 import {mountWithAppContext} from 'tests/utilities';
-import {screen, waitFor} from '@testing-library/react';
+import {screen, waitFor} from '@testing-library/preact';
 
 import {Address, isValidCountryCode} from '../Address';
 import type {Address as AddressType} from '@shopify/address';

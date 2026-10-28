@@ -11,6 +11,7 @@ node_modules
 /uploads
 /extensions/**/dist/
 /extensions/**/build/
+/extensions/**/manifest.json
 .shopify/bundle
 
 .env

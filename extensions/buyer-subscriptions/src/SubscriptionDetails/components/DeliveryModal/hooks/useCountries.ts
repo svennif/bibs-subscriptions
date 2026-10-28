@@ -1,4 +1,4 @@
-import {useEffect, useState} from 'react';
+import {useEffect, useState} from 'preact/hooks';
 import type {Country} from '@shopify/address';
 import AddressFormatter from '@shopify/address';
 import {useExtensionApi} from 'foundation/Api';

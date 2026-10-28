@@ -1,4 +1,4 @@
-import {useCallback, useState} from 'react';
+import {useCallback, useState} from 'preact/hooks';
 
 type UseApi<Data, Variables> = [
   (query: string, variables?: Variables) => Promise<Data | undefined>,
@@ -22,7 +22,7 @@ export function useGraphqlApi<Data, Variables = undefined>(): UseApi<
   Data,
   Variables
 > {
-  const apiVersion = '2025-01';
+  const apiVersion = '2026-10';
   const [loading, setLoading] = useState(true);
   const [firstFetchComplete, setFirstFetchComplete] = useState(false);
   const [error, setError] = useState<Error>();
@@ -31,10 +31,9 @@ export function useGraphqlApi<Data, Variables = undefined>(): UseApi<
   const customerApiFetch = useCallback(
     async (query: string, variables?: Variables) => {
       setLoading(true);
-      let resp: Response;
 
       try {
-        resp = await fetch(
+        const resp = await fetch(
           `shopify:customer-accounts/customer/api/${apiVersion}/graphql`,
           {
             method: 'POST',
@@ -44,20 +43,33 @@ export function useGraphqlApi<Data, Variables = undefined>(): UseApi<
             body: JSON.stringify({query, variables}),
           },
         );
+
+        if (!resp.ok) {
+          throw new Error(
+            `Customer Account API request failed with status ${resp.status}: ${await resp.text()}`,
+          );
+        }
+
+        const {data, errors}: {data: Data; errors?: unknown[]} =
+          await resp.json();
+
+        if (errors?.length) {
+          console.error('Customer Account API returned errors:', errors);
+        }
+
+        setData(data);
+        setError(undefined);
+
+        return data;
       } catch (err) {
+        console.error('Customer Account API request failed:', err);
         setError(err as Error);
-        setLoading(false);
-        setFirstFetchComplete(true);
 
         return;
+      } finally {
+        setLoading(false);
+        setFirstFetchComplete(true);
       }
-
-      const {data}: {data: Data} = await resp.json();
-      setData(data);
-      setLoading(false);
-      setFirstFetchComplete(true);
-
-      return data;
     },
     [],
   );

@@ -1,17 +1,22 @@
 import {mockApis} from 'tests/mocks/api';
 import {mockUiExtensionComponents} from 'tests/mocks/components';
-import {mountWithAppContext} from 'tests/utilities';
+import {
+  changeValue,
+  clickButton,
+  mountWithAppContext,
+  queryByHeading,
+} from 'tests/utilities';
 
-import {screen, waitFor} from '@testing-library/react';
+import {waitFor} from '@testing-library/preact';
 
 import {faker} from '@faker-js/faker';
 import type {CurrencyCode} from 'generatedTypes/customer.types';
 
 import {DeliveryModal} from '../DeliveryModal';
-import {DELIVERY_MODAL_ID} from '../types';
+import {getDeliveryModalId} from '../types';
 import * as useFetchDeliveryOptionsHook from '../hooks/useFetchDeliveryOptions';
 import {MockAddressFormHooks, createMockAddress} from 'tests/mocks/address';
-import userEvent from '@testing-library/user-event';
+import {getField, queryField} from '../../../tests/helpers';
 
 const {mockExtensionApi} = mockApis();
 
@@ -39,37 +44,41 @@ vi.mock('../hooks/useFetchDeliveryOptions', () => ({
 }));
 
 async function clickContinueButton() {
-  const continueButton = screen.getByRole('button', {name: 'Continue'});
-  await userEvent.click(continueButton);
+  await clickButton('Continue');
 }
 
 async function clickCancelButton() {
-  const cancelButton = screen.getByRole('button', {name: 'Cancel'});
-  await userEvent.click(cancelButton);
+  await clickButton('Cancel');
 }
 
 describe('<DeliveryModal />', () => {
+  let overlays: ReturnType<typeof mockUiExtensionComponents>;
+
   beforeEach(() => {
     mockExtensionApi();
-    mockUiExtensionComponents();
+    overlays = mockUiExtensionComponents();
     MockAddressFormHooks();
   });
 
   const defaultProps = {
     currentAddress: createMockAddress({country: 'CA', province: 'ON'}),
     subscriptionContractId: '123',
-    addressModalOpen: true,
     refetchSubscriptionContract: vi.fn(),
-    onClose: vi.fn(),
   };
 
   describe('state', () => {
     it('shows the address modal initially', async () => {
       await mountWithAppContext(<DeliveryModal {...defaultProps} />);
 
-      expect(
-        screen.getByTestId('modal-Edit shipping address'),
-      ).toBeInTheDocument();
+      expect(queryByHeading('Edit shipping address')).toBeInTheDocument();
+    });
+
+    it('uses a modal id that is unique to the contract', async () => {
+      await mountWithAppContext(<DeliveryModal {...defaultProps} />);
+
+      expect(document.getElementById(getDeliveryModalId('123'))).toBe(
+        queryByHeading('Edit shipping address'),
+      );
     });
 
     it('switches to the delivery method selection modal once continue is clicked', async () => {
@@ -78,9 +87,7 @@ describe('<DeliveryModal />', () => {
       await clickContinueButton();
 
       await waitFor(() => {
-        expect(
-          screen.getByTestId('modal-Select delivery method'),
-        ).toBeInTheDocument();
+        expect(queryByHeading('Select delivery method')).toBeInTheDocument();
       });
     });
 
@@ -89,17 +96,14 @@ describe('<DeliveryModal />', () => {
 
       await clickContinueButton();
       await waitFor(() => {
-        expect(
-          screen.getByTestId('modal-Select delivery method'),
-        ).toBeInTheDocument();
+        expect(queryByHeading('Select delivery method')).toBeInTheDocument();
       });
 
       await clickCancelButton();
       await waitFor(() => {
-        expect(
-          screen.getByTestId('modal-Edit shipping address'),
-        ).toBeInTheDocument();
+        expect(queryByHeading('Edit shipping address')).toBeInTheDocument();
       });
+      expect(overlays.hideOverlay).not.toHaveBeenCalled();
     });
 
     it('does not proceed to delivery selection and displays an error when there are no delivery options', async () => {
@@ -118,11 +122,8 @@ describe('<DeliveryModal />', () => {
 
       await clickContinueButton();
 
-      expect(screen.getByTitle(mockError)).toBeInTheDocument();
-
-      expect(
-        screen.getByTestId('modal-Edit shipping address'),
-      ).toBeInTheDocument();
+      expect(queryByHeading(mockError)).toBeInTheDocument();
+      expect(queryByHeading('Edit shipping address')).toBeInTheDocument();
     });
   });
 
@@ -149,14 +150,11 @@ describe('<DeliveryModal />', () => {
     });
 
     it('closes the modal when the cancel button is clicked', async () => {
-      const closeOverlaySpy = vi.fn();
-      mockExtensionApi({mocks: {closeOverlay: closeOverlaySpy}});
-
       await mountWithAppContext(<DeliveryModal {...defaultProps} />);
 
       await clickCancelButton();
 
-      expect(closeOverlaySpy).toHaveBeenCalledWith(DELIVERY_MODAL_ID);
+      expect(overlays.hiddenOverlayIds()).toEqual([getDeliveryModalId('123')]);
     });
   });
 
@@ -176,20 +174,17 @@ describe('<DeliveryModal />', () => {
       const removedFieldLabels = ['City', 'Postal code'];
 
       currentFieldLabels.forEach((field) => {
-        expect(screen.getByLabelText(field)).toBeInTheDocument();
+        expect(queryField(field)).toBeInTheDocument();
       });
 
-      const countrySelector = screen.getAllByRole('combobox')[0];
-      await userEvent.click(countrySelector);
-
-      await userEvent.selectOptions(countrySelector, ['VA']);
+      await changeValue(getField('Country/region'), 'VA');
 
       newFieldLabels.forEach((field) => {
-        expect(screen.getByLabelText(field)).toBeInTheDocument();
+        expect(queryField(field)).toBeInTheDocument();
       });
 
       removedFieldLabels.forEach((field) => {
-        expect(screen.queryByLabelText(field)).not.toBeInTheDocument();
+        expect(queryField(field)).not.toBeInTheDocument();
       });
     });
   });

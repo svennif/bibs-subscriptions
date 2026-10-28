@@ -1,10 +1,3 @@
-import {
-  Card,
-  Grid,
-  Text,
-  BlockStack,
-  InlineStack,
-} from '@shopify/ui-extensions-react/customer-account';
 import {useExtensionApi} from 'foundation/Api';
 import type {Money, SubscriptionLine} from 'types';
 import {SubscriptionLineItem} from '../SubscriptionLineItem';
@@ -23,62 +16,60 @@ export function PriceSummaryCard({price, lines}: PriceSummaryCardProps) {
   const {i18n} = useExtensionApi();
 
   return (
-    <Card padding>
-      <BlockStack spacing="loose">
-        <BlockStack spacing="tight">
+    <s-section>
+      <s-stack gap="large">
+        <s-stack gap="small">
           {lines.map((line) => (
             <SubscriptionLineItem key={line.id} line={line} />
           ))}
-        </BlockStack>
-        <BlockStack spacing="tight">
-          <Grid columns={['fill', 'auto']}>
-            <Text>{i18n.translate('priceSummary.subtotal')}</Text>
-            <Text>
+        </s-stack>
+        <s-stack gap="small">
+          <s-grid gridTemplateColumns="1fr auto">
+            <s-text>{i18n.translate('priceSummary.subtotal')}</s-text>
+            <s-text>
               {i18n.formatCurrency(Number(price.subtotalPrice.amount), {
                 currency: price.subtotalPrice.currencyCode,
                 currencyDisplay: 'narrowSymbol',
               })}
-            </Text>
-          </Grid>
-          <Grid columns={['fill', 'auto']}>
-            <Text>{i18n.translate('priceSummary.shipping')}</Text>
-            <Text>
+            </s-text>
+          </s-grid>
+          <s-grid gridTemplateColumns="1fr auto">
+            <s-text>{i18n.translate('priceSummary.shipping')}</s-text>
+            <s-text>
               {i18n.formatCurrency(Number(price.totalShippingPrice.amount), {
                 currency: price.totalShippingPrice.currencyCode,
                 currencyDisplay: 'narrowSymbol',
               })}
-            </Text>
-          </Grid>
+            </s-text>
+          </s-grid>
           {price.totalTax ? (
-            <Grid columns={['fill', 'auto']}>
-              <Text>{i18n.translate('priceSummary.taxes')}</Text>
-              <Text>
+            <s-grid gridTemplateColumns="1fr auto">
+              <s-text>{i18n.translate('priceSummary.taxes')}</s-text>
+              <s-text>
                 {i18n.formatCurrency(Number(price.totalTax.amount), {
                   currency: price.totalTax.currencyCode,
                   currencyDisplay: 'narrowSymbol',
                 })}
-              </Text>
-            </Grid>
+              </s-text>
+            </s-grid>
           ) : null}
-        </BlockStack>
-        <Grid columns={['fill', 'auto']}>
-          <Text emphasis="bold" size="large">
-            {i18n.translate('priceSummary.total')}
-          </Text>
-          <InlineStack blockAlignment="baseline" spacing="tight">
-            <Text size="small" appearance="subdued">
+        </s-stack>
+        <s-grid gridTemplateColumns="1fr auto" alignItems="center">
+          <s-heading>{i18n.translate('priceSummary.total')}</s-heading>
+          <s-stack direction="inline" gap="small" alignItems="center">
+            <s-text type="small" color="subdued">
               {price.totalPrice.currencyCode}
-            </Text>
-            <Text emphasis="bold" size="large">
+            </s-text>
+            <s-heading>
               {i18n.formatCurrency(Number(price.totalPrice.amount), {
                 currency: price.totalPrice.currencyCode,
                 compactDisplay: 'short',
                 currencyDisplay: 'narrowSymbol',
               })}
-            </Text>
-          </InlineStack>
-        </Grid>
-      </BlockStack>
-    </Card>
+            </s-heading>
+          </s-stack>
+        </s-grid>
+      </s-stack>
+    </s-section>
   );
 }

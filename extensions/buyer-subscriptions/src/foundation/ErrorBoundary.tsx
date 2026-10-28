@@ -1,9 +1,9 @@
-import React, {useEffect} from 'react';
-import {BlockStack, Text} from '@shopify/ui-extensions-react/customer-account';
+import {Component, type ComponentChildren} from 'preact';
+import {useEffect} from 'preact/hooks';
 import {useExtensionApi} from './Api';
 
 export interface Props {
-  children: React.ReactNode;
+  children: ComponentChildren;
 }
 interface State {
   error?: Error;
@@ -23,13 +23,13 @@ const ErrorContent = ({error}: ErrorContentProps) => {
   }, [error]);
 
   return (
-    <BlockStack inlineAlignment="center" spacing="loose">
-      <Text>{i18n.translate('errorBoundary.content')}</Text>
-    </BlockStack>
+    <s-stack alignItems="center" gap="large">
+      <s-text>{i18n.translate('errorBoundary.content')}</s-text>
+    </s-stack>
   );
 };
 
-export class ErrorBoundary extends React.Component<Props, State> {
+export class ErrorBoundary extends Component<Props, State> {
   state: State = {error: undefined};
 
   componentDidCatch(error: Error) {

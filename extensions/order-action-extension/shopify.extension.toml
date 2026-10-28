@@ -1,9 +1,10 @@
-api_version = "2025-10"
+api_version = "2026-10"
 
 [[extensions]]
 type = "ui_extension"
 name = "Manage subscription button"
 handle = "buyer-subscriptions-oa"
+uid = "616cac44-d0a2-71df-af0c-ca1793419c703adcbc06"
 
 [[extensions.targeting]]
 module = "./src/OrderActionMenuItem.tsx"

@@ -1,4 +1,4 @@
-import {useState, useEffect} from 'react';
+import {useState, useEffect} from 'preact/hooks';
 import {useFormatDate} from 'utilities/hooks/useFormatDate';
 
 import SkipOrderMutation from '../graphql/SkipOrderMutation';
@@ -26,12 +26,7 @@ export function useToggleSkipOrder({
   refetchSubscriptionContract: () => void;
   refetchLoading: boolean;
 }) {
-  const {
-    i18n,
-    ui: {
-      toast: {show: showToast},
-    },
-  } = useExtensionApi();
+  const {i18n, toast} = useExtensionApi();
   const [bannerText, setBannerText] = useState<string | null>(null);
   const [bannerStatus, setBannerStatus] = useState<BannerStatus | null>(null);
   const [cycleIndexLoading, setCycleIndexLoading] = useState<number | null>(
@@ -70,7 +65,7 @@ export function useToggleSkipOrder({
       return;
     }
 
-    showToast(
+    toast.show(
       i18n.translate('upcomingOrdersModal.skippedSuccessMessage', {
         orderDate: formatDate(
           result.subscriptionBillingCycleSkip.billingCycle
@@ -101,7 +96,7 @@ export function useToggleSkipOrder({
       return;
     }
 
-    showToast(
+    toast.show(
       i18n.translate('upcomingOrdersModal.unskippedSuccessMessage', {
         orderDate: formatDate(
           result.subscriptionBillingCycleUnskip.billingCycle

@@ -1,4 +1,4 @@
-const DEFAULT_API_VERSION = '2025-10';
+const DEFAULT_API_VERSION = '2026-10';
 
 export async function fetchCustomerApi<TData = any, TVariables = any>(
   query: string,

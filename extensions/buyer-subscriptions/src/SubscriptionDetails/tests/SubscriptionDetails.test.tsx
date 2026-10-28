@@ -1,8 +1,12 @@
 import {mockUiExtensionComponents} from 'tests/mocks/components';
 import {mockApis} from 'tests/mocks/api';
 import {mockUseToast} from 'tests/mocks/toast';
-import {screen, waitFor} from '@testing-library/react';
-import {mountWithAppContext} from 'tests/utilities';
+import {screen, waitFor} from '@testing-library/preact';
+import {mountWithAppContext, queryByHeading} from 'tests/utilities';
+import {getPauseModalId} from 'components/PauseSubscriptionModal';
+import {getResumeModalId} from 'components/ResumeSubscriptionModal';
+import {getSkipNextOrderModalId} from 'components/SkipNextOrderModal';
+import {getCancelModalId} from 'components/CancelSubscriptionModal';
 import type {
   CountryCode,
   SubscriptionContractSubscriptionStatus,
@@ -13,7 +17,9 @@ import {SubscriptionDetails} from '../SubscriptionDetails';
 import type {graphqlSubscriptionContract} from './Fixtures';
 import {createMockSubscriptionContractDetails} from './Fixtures';
 import {SuccessToastType} from 'utilities/hooks/useToast';
-import userEvent from '@testing-library/user-event';
+import {clickButtonWithin, getModal, queryPageAction} from './helpers';
+
+const CONTRACT_ID = 'gid://shopify/SubscriptionContract/1';
 
 const {mockCustomerApiGraphQL, mockExtensionApi} = mockApis();
 const {mockShowSuccessToast} = mockUseToast();
@@ -57,7 +63,7 @@ describe('<SubscriptionDetails />', () => {
 
     await mountWithAppContext(<SubscriptionDetails id="1" />);
 
-    expect(screen.getByText('Manage subscription')).toBeInTheDocument();
+    expect(queryByHeading('Manage subscription')?.tagName).toBe('S-PAGE');
   });
 
   it('renders Subscription details for cancelled contracts', async () => {
@@ -67,7 +73,7 @@ describe('<SubscriptionDetails />', () => {
 
     await mountWithAppContext(<SubscriptionDetails id="1" />);
 
-    expect(screen.getByText('Subscription details')).toBeInTheDocument();
+    expect(queryByHeading('Subscription details')?.tagName).toBe('S-PAGE');
   });
 
   describe('<PastOrdersCard />', () => {
@@ -242,11 +248,9 @@ describe('<SubscriptionDetails />', () => {
 
       await mountWithAppContext(<SubscriptionDetails id="1" />);
 
-      expect(screen.getByRole('button', {name: 'Pause'})).toBeInTheDocument();
-      expect(screen.getByRole('button', {name: 'Cancel'})).toBeInTheDocument();
-      expect(
-        screen.queryByRole('button', {name: 'Resume'}),
-      ).not.toBeInTheDocument();
+      expect(queryPageAction('Pause')).toBeInTheDocument();
+      expect(queryPageAction('Cancel')).toBeInTheDocument();
+      expect(queryPageAction('Resume')).not.toBeInTheDocument();
     });
 
     it('shows resume and cancel buttons when status is paused', async () => {
@@ -256,11 +260,9 @@ describe('<SubscriptionDetails />', () => {
 
       await mountWithAppContext(<SubscriptionDetails id="1" />);
 
-      expect(screen.getByRole('button', {name: 'Resume'})).toBeInTheDocument();
-      expect(screen.getByRole('button', {name: 'Cancel'})).toBeInTheDocument();
-      expect(
-        screen.queryByRole('button', {name: 'Pause'}),
-      ).not.toBeInTheDocument();
+      expect(queryPageAction('Resume')).toBeInTheDocument();
+      expect(queryPageAction('Cancel')).toBeInTheDocument();
+      expect(queryPageAction('Pause')).not.toBeInTheDocument();
     });
 
     it('does not show any action buttons when the status is cancelled', async () => {
@@ -270,15 +272,9 @@ describe('<SubscriptionDetails />', () => {
 
       await mountWithAppContext(<SubscriptionDetails id="1" />);
 
-      expect(
-        screen.queryByRole('button', {name: 'Pause'}),
-      ).not.toBeInTheDocument();
-      expect(
-        screen.queryByRole('button', {name: 'Resume'}),
-      ).not.toBeInTheDocument();
-      expect(
-        screen.queryByRole('button', {name: 'Cancel'}),
-      ).not.toBeInTheDocument();
+      expect(queryPageAction('Pause')).not.toBeInTheDocument();
+      expect(queryPageAction('Resume')).not.toBeInTheDocument();
+      expect(queryPageAction('Cancel')).not.toBeInTheDocument();
     });
 
     it('shows a success toast when a subscription is paused', async () => {
@@ -302,9 +298,13 @@ describe('<SubscriptionDetails />', () => {
 
       await mountWithAppContext(<SubscriptionDetails id="1" />);
 
-      await userEvent.click(screen.getByRole('button', {name: 'Pause'}));
-      await userEvent.click(
-        screen.getByRole('button', {name: 'Pause subscription'}),
+      expect(queryPageAction('Pause')).toHaveAttribute(
+        'commandFor',
+        getPauseModalId(CONTRACT_ID),
+      );
+      await clickButtonWithin(
+        getModal(getPauseModalId(CONTRACT_ID)),
+        'Pause subscription',
       );
 
       expect(showToastSpy).toHaveBeenCalledWith(SuccessToastType.Paused);
@@ -333,8 +333,14 @@ describe('<SubscriptionDetails />', () => {
 
       await mountWithAppContext(<SubscriptionDetails id="1" />);
 
-      await userEvent.click(screen.getByRole('button', {name: 'Resume'}));
-      await userEvent.click(screen.getByRole('button', {name: 'Continue'}));
+      expect(queryPageAction('Resume')).toHaveAttribute(
+        'commandFor',
+        getResumeModalId(CONTRACT_ID),
+      );
+      await clickButtonWithin(
+        getModal(getResumeModalId(CONTRACT_ID)),
+        'Continue',
+      );
 
       expect(showToastSpy).toHaveBeenCalledWith(SuccessToastType.Resumed);
     });
@@ -360,8 +366,10 @@ describe('<SubscriptionDetails />', () => {
 
       await mountWithAppContext(<SubscriptionDetails id="1" />);
 
-      await userEvent.click(screen.getByRole('button', {name: 'Skip'}));
-      await userEvent.click(screen.getAllByRole('button', {name: 'Skip'})[1]);
+      await clickButtonWithin(
+        getModal(getSkipNextOrderModalId(CONTRACT_ID)),
+        'Skip',
+      );
 
       expect(showToastSpy).toHaveBeenCalledWith(SuccessToastType.Skipped);
     });
@@ -387,9 +395,13 @@ describe('<SubscriptionDetails />', () => {
 
       await mountWithAppContext(<SubscriptionDetails id="1" />);
 
-      await userEvent.click(screen.getByRole('button', {name: 'Cancel'}));
-      await userEvent.click(
-        screen.getByRole('button', {name: 'Cancel subscription'}),
+      expect(queryPageAction('Cancel')).toHaveAttribute(
+        'commandFor',
+        getCancelModalId(CONTRACT_ID),
+      );
+      await clickButtonWithin(
+        getModal(getCancelModalId(CONTRACT_ID)),
+        'Cancel subscription',
       );
 
       expect(showToastSpy).toHaveBeenCalledWith(SuccessToastType.Cancelled);
@@ -416,8 +428,6 @@ describe('<SubscriptionDetails />', () => {
       });
 
       await mountWithAppContext(<SubscriptionDetails id="1" />);
-
-      await userEvent.click(screen.getByRole('button', {name: 'Resume'}));
 
       expect(
         screen.getByText(

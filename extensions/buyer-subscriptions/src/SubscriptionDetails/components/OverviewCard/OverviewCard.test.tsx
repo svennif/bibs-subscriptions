@@ -1,12 +1,11 @@
 import {mockApis} from 'tests/mocks/api';
 import {mockUiExtensionComponents} from 'tests/mocks/components';
-import {mountWithAppContext} from 'tests/utilities';
+import {getButton, mountWithAppContext, queryByHeading} from 'tests/utilities';
 import type {CountryCode} from 'generatedTypes/customer.types';
-import {screen} from '@testing-library/react';
 
 import type {OverviewCardProps} from './OverviewCard';
 import {OverviewCard} from './OverviewCard';
-import userEvent from '@testing-library/user-event';
+import {getDeliveryModalId} from '../DeliveryModal/types';
 import {MockAddressFormHooks} from 'tests/mocks/address';
 
 const mockProps: OverviewCardProps = {
@@ -32,6 +31,8 @@ const mockProps: OverviewCardProps = {
   refetchSubscriptionContract: vi.fn(),
 };
 
+const DELIVERY_MODAL_ID = getDeliveryModalId(mockProps.contractId);
+
 const {mockExtensionApi, mockCustomerApiGraphQL} = mockApis();
 
 describe('<OverviewCard />', () => {
@@ -45,21 +46,19 @@ describe('<OverviewCard />', () => {
   it('shows a button to edit the shipping address', async () => {
     await mountWithAppContext(<OverviewCard {...mockProps} />);
 
-    expect(screen.getByLabelText('Edit shipping address')).toBeInTheDocument();
+    expect(getButton('Edit shipping address')).toBeInTheDocument();
   });
 
   it('opens the delivery modal when the edit shipping address button is clicked', async () => {
     await mountWithAppContext(<OverviewCard {...mockProps} />);
 
-    expect(
-      screen.queryByTestId('modal-Edit shipping address'),
-    ).not.toBeInTheDocument();
+    const editButton = getButton('Edit shipping address');
+    expect(editButton).toHaveAttribute('command', '--show');
+    expect(editButton).toHaveAttribute('commandFor', DELIVERY_MODAL_ID);
 
-    await userEvent.click(screen.getByLabelText('Edit shipping address'));
-
-    expect(
-      screen.getByTestId('modal-Edit shipping address'),
-    ).toBeInTheDocument();
+    const modal = document.getElementById(DELIVERY_MODAL_ID);
+    expect(modal?.tagName).toBe('S-MODAL');
+    expect(modal).toBe(queryByHeading('Edit shipping address'));
   });
 
   it('shows a button to edit the pickup address', async () => {
@@ -70,7 +69,7 @@ describe('<OverviewCard />', () => {
     };
     await mountWithAppContext(<OverviewCard {...mockPropsWithPickupAddress} />);
 
-    expect(screen.getByLabelText('Edit pickup address')).toBeInTheDocument();
+    expect(getButton('Edit pickup address')).toBeInTheDocument();
   });
 
   it('opens the delivery modal when the edit pickup address button is clicked', async () => {
@@ -81,14 +80,33 @@ describe('<OverviewCard />', () => {
     };
     await mountWithAppContext(<OverviewCard {...mockPropsWithPickupAddress} />);
 
-    expect(
-      screen.queryByTestId('modal-Edit pickup address'),
-    ).not.toBeInTheDocument();
+    const editButton = getButton('Edit pickup address');
+    expect(editButton).toHaveAttribute('command', '--show');
+    expect(editButton).toHaveAttribute('commandFor', DELIVERY_MODAL_ID);
 
-    await userEvent.click(screen.getByLabelText('Edit pickup address'));
+    expect(document.getElementById(DELIVERY_MODAL_ID)).toBe(
+      queryByHeading('Edit shipping address'),
+    );
+  });
 
-    expect(
-      screen.getByTestId('modal-Edit shipping address'),
-    ).toBeInTheDocument();
+  it('does not render the delivery modal when renderDeliveryModal is false', async () => {
+    await mountWithAppContext(
+      <OverviewCard {...mockProps} renderDeliveryModal={false} />,
+    );
+
+    expect(getButton('Edit shipping address')).toHaveAttribute(
+      'commandFor',
+      DELIVERY_MODAL_ID,
+    );
+    expect(document.getElementById(DELIVERY_MODAL_ID)).toBeNull();
+  });
+
+  it('does not show edit buttons or the delivery modal for cancelled contracts', async () => {
+    await mountWithAppContext(
+      <OverviewCard {...mockProps} status="CANCELLED" />,
+    );
+
+    expect(document.querySelector('s-link')).toBeNull();
+    expect(document.getElementById(DELIVERY_MODAL_ID)).toBeNull();
   });
 });

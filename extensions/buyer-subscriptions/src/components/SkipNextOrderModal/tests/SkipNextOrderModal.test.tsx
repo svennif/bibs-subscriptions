@@ -1,54 +1,67 @@
 import {mockApis} from 'tests/mocks/api';
 import {mockUiExtensionComponents} from 'tests/mocks/components';
-import {mountWithAppContext} from 'tests/utilities';
-import {screen, waitFor} from '@testing-library/react';
+import {
+  clickButton,
+  getButton,
+  mountWithAppContext,
+  queryByHeading,
+} from 'tests/utilities';
+import {waitFor} from '@testing-library/preact';
 
 import type {SkipNextOrderModalProps} from '../SkipNextOrderModal';
 import {
-  SKIP_NEXT_ORDER_MODAL_ID,
+  getSkipNextOrderModalId,
   SkipNextOrderModal,
 } from '../SkipNextOrderModal';
-import {clickCloseButton} from 'src/SubscriptionList/components/SubscriptionListItem/tests/TestActions';
-import userEvent from '@testing-library/user-event';
 
 const {mockExtensionApi, mockCustomerApiGraphQL} = mockApis();
 
 const defaultProps: SkipNextOrderModalProps = {
-  contractId: '1',
+  contractId: 'gid://shopify/SubscriptionContract/1',
   cycleIndexToSkip: 2,
   resumeDate: '2021-01-01',
   onSkipOrder: vi.fn(),
 };
 
+const SKIP_NEXT_ORDER_MODAL_ID = getSkipNextOrderModalId(
+  defaultProps.contractId,
+);
+
 describe('<SkipNextOrderModal />', () => {
+  let overlays: ReturnType<typeof mockUiExtensionComponents>;
+
   beforeEach(() => {
     mockExtensionApi();
-    mockUiExtensionComponents();
+    overlays = mockUiExtensionComponents();
   });
 
   it('renders with a skip and close button', async () => {
     await mountWithAppContext(<SkipNextOrderModal {...defaultProps} />);
 
-    expect(screen.getByTitle('Skip next order')).toBeInTheDocument();
-    expect(screen.getByRole('button', {name: 'Skip'})).toBeInTheDocument();
-    expect(screen.getByRole('button', {name: 'Close'})).toBeInTheDocument();
+    expect(queryByHeading('Skip next order')).toBeInTheDocument();
+    expect(getButton('Skip')).toBeInTheDocument();
+    expect(getButton('Close')).toBeInTheDocument();
   });
 
-  it('calls ui.overlay.close after clicking close button', async () => {
-    const overlayCloseSpy = vi.fn();
-    mockExtensionApi({mocks: {closeOverlay: overlayCloseSpy}});
-
+  it('uses a modal id that is unique to the contract', async () => {
     await mountWithAppContext(<SkipNextOrderModal {...defaultProps} />);
 
-    await clickCloseButton();
-
-    expect(overlayCloseSpy).toHaveBeenCalledWith(SKIP_NEXT_ORDER_MODAL_ID);
+    expect(document.getElementById(SKIP_NEXT_ORDER_MODAL_ID)?.tagName).toBe(
+      'S-MODAL',
+    );
+    expect(SKIP_NEXT_ORDER_MODAL_ID).toBe('skip-next-order-modal-1');
   });
 
-  it('calls onSkipOrder and ui.overlay.close after successfully pausing a contract', async () => {
-    const overlayCloseSpy = vi.fn();
+  it('closes the modal from the close button', async () => {
+    await mountWithAppContext(<SkipNextOrderModal {...defaultProps} />);
+
+    const closeButton = getButton('Close');
+    expect(closeButton).toHaveAttribute('command', '--hide');
+    expect(closeButton).toHaveAttribute('commandFor', SKIP_NEXT_ORDER_MODAL_ID);
+  });
+
+  it('calls onSkipOrder and closes the modal after successfully skipping an order', async () => {
     const onSkipOrderSpy = vi.fn();
-    mockExtensionApi({mocks: {closeOverlay: overlayCloseSpy}});
 
     mockSkipBillingCycleMutation({success: true});
 
@@ -56,16 +69,14 @@ describe('<SkipNextOrderModal />', () => {
       <SkipNextOrderModal {...defaultProps} onSkipOrder={onSkipOrderSpy} />,
     );
 
-    await clickSkipButton();
+    await clickButton('Skip');
 
-    expect(overlayCloseSpy).toHaveBeenCalled();
+    expect(overlays.hiddenOverlayIds()).toEqual([SKIP_NEXT_ORDER_MODAL_ID]);
     expect(onSkipOrderSpy).toHaveBeenCalled();
   });
 
-  it('does not call onSkipOrder or ui.overlay.close after failing to pause a contract', async () => {
-    const overlayCloseSpy = vi.fn();
+  it('does not call onSkipOrder or close the modal after failing to skip an order', async () => {
     const onSkipOrderSpy = vi.fn();
-    mockExtensionApi({mocks: {closeOverlay: overlayCloseSpy}});
 
     mockSkipBillingCycleMutation({success: false});
 
@@ -73,10 +84,10 @@ describe('<SkipNextOrderModal />', () => {
       <SkipNextOrderModal {...defaultProps} onSkipOrder={onSkipOrderSpy} />,
     );
 
-    await clickSkipButton();
+    await clickButton('Skip');
 
     expect(onSkipOrderSpy).not.toHaveBeenCalled();
-    expect(overlayCloseSpy).not.toHaveBeenCalled();
+    expect(overlays.hideOverlay).not.toHaveBeenCalled();
   });
 
   it('does not render an error banner by default', async () => {
@@ -84,32 +95,20 @@ describe('<SkipNextOrderModal />', () => {
 
     await mountWithAppContext(<SkipNextOrderModal {...defaultProps} />);
 
-    expect(
-      screen.queryByTitle('Unable to skip next order'),
-    ).not.toBeInTheDocument();
+    expect(queryByHeading('Unable to skip next order')).not.toBeInTheDocument();
   });
 
   it('renders an error banner when there is an error', async () => {
-    const overlayCloseSpy = vi.fn();
-    mockExtensionApi({mocks: {closeOverlay: overlayCloseSpy}});
-
     mockSkipBillingCycleMutation({success: false});
     await mountWithAppContext(<SkipNextOrderModal {...defaultProps} />);
 
-    await clickSkipButton();
+    await clickButton('Skip');
 
     await waitFor(() => {
-      expect(
-        screen.getByTitle('Unable to skip next order'),
-      ).toBeInTheDocument();
+      expect(queryByHeading('Unable to skip next order')).toBeInTheDocument();
     });
   });
 });
-
-async function clickSkipButton() {
-  const skipButton = screen.getByRole('button', {name: 'Skip'});
-  await userEvent.click(skipButton);
-}
 
 function mockSkipBillingCycleMutation({success = true}: {success: boolean}) {
   mockCustomerApiGraphQL({

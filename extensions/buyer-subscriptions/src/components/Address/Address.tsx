@@ -1,5 +1,4 @@
-import {useState, useEffect} from 'react';
-import {BlockStack, Text} from '@shopify/ui-extensions-react/customer-account';
+import {useState, useEffect} from 'preact/hooks';
 import type {Address as AddressType} from '@shopify/address';
 import AddressFormatter, {loadCountries} from '@shopify/address';
 import {useExtensionApi} from 'foundation/Api';
@@ -12,11 +11,11 @@ export function Address({address}: AddressProps) {
   const formattedAddress = useFormattedAddress(address);
 
   return formattedAddress ? (
-    <BlockStack spacing="none">
+    <s-stack gap="none">
       {formattedAddress.map((line) => (
-        <Text key={line}>{line}</Text>
+        <s-text key={line}>{line}</s-text>
       ))}
-    </BlockStack>
+    </s-stack>
   ) : null;
 }
 

@@ -16,10 +16,7 @@ export interface SuccessToastProps {
 }
 
 export function useToast() {
-  const {
-    i18n,
-    ui: {toast},
-  } = useExtensionApi();
+  const {i18n, toast} = useExtensionApi();
 
   function showSuccessToast(type: SuccessToastType) {
     const title = i18n.translate(`successBanner.${type}`);

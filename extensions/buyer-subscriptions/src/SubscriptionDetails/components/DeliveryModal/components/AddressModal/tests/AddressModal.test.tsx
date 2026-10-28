@@ -1,11 +1,12 @@
 import {mockApis} from 'tests/mocks/api';
 import {mockUiExtensionComponents} from 'tests/mocks/components';
-import {mountWithAppContext} from 'tests/utilities';
-import {screen} from '@testing-library/react';
+import {clickButton, mountWithAppContext} from 'tests/utilities';
+import {screen} from '@testing-library/preact';
 
 import {AddressModal} from '../..';
 import * as useCountries from '../../../hooks/useCountries';
 import {MockAddressFormHooks, createMockAddress} from 'tests/mocks/address';
+import {getField, queryField} from '../../../../../tests/helpers';
 
 const {mockExtensionApi} = mockApis();
 
@@ -19,7 +20,6 @@ describe('<AddressModal />', () => {
   const mockAddress = createMockAddress({country: 'CA', province: 'ON'});
   const defaultProps = {
     address: mockAddress,
-    currentAddress: mockAddress,
     addressModalOpen: true,
     errors: [],
     loading: false,
@@ -36,41 +36,62 @@ describe('<AddressModal />', () => {
   const defaultPropsWithoutCountry = {
     ...defaultProps,
     address: mockAddressWithoutCountry,
-    currentAddress: mockAddressWithoutCountry,
   };
 
   it('renders address lines', async () => {
     await mountWithAppContext(<AddressModal {...defaultProps} />);
 
-    expect(screen.getByText('Country/region')).toBeInTheDocument();
-    expect(screen.getByText('First name')).toBeInTheDocument();
-    expect(screen.getByText('Last name')).toBeInTheDocument();
-    expect(screen.getByText('City')).toBeInTheDocument();
-    expect(screen.getByText('Province')).toBeInTheDocument();
-    expect(screen.getByText('Postal code')).toBeInTheDocument();
+    expect(queryField('Country/region')).toBeInTheDocument();
+    expect(queryField('First name')).toBeInTheDocument();
+    expect(queryField('Last name')).toBeInTheDocument();
+    expect(queryField('City')).toBeInTheDocument();
+    expect(queryField('Province')).toBeInTheDocument();
+    expect(queryField('Postal code')).toBeInTheDocument();
   });
 
   it('renders default address lines when country is not set', async () => {
     await mountWithAppContext(<AddressModal {...defaultPropsWithoutCountry} />);
 
-    expect(screen.getByText('Country/region')).toBeInTheDocument();
-    expect(screen.getByText('First name')).toBeInTheDocument();
-    expect(screen.getByText('Last name')).toBeInTheDocument();
-    expect(screen.queryByText('City')).not.toBeInTheDocument();
-    expect(screen.queryByText('Province')).not.toBeInTheDocument();
-    expect(screen.queryByText('Postal code')).not.toBeInTheDocument();
+    expect(queryField('Country/region')).toBeInTheDocument();
+    expect(queryField('First name')).toBeInTheDocument();
+    expect(queryField('Last name')).toBeInTheDocument();
+    expect(queryField('City')).not.toBeInTheDocument();
+    expect(queryField('Province')).not.toBeInTheDocument();
+    expect(queryField('Postal code')).not.toBeInTheDocument();
   });
 
   it('shows different countries in the dropdown', async () => {
     await mountWithAppContext(<AddressModal {...defaultProps} />);
 
-    expect(screen.getByRole('option', {name: 'Canada'})).toBeInTheDocument();
-    expect(
-      screen.getByRole('option', {name: 'United States'}),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole('option', {name: 'Vatican City'}),
-    ).toBeInTheDocument();
+    const countrySelect = getField('Country/region');
+    const options = Array.from(countrySelect.querySelectorAll('s-option')).map(
+      (option) => option.textContent,
+    );
+
+    expect(options).toEqual(['Canada', 'United States', 'Vatican City']);
+  });
+
+  it('renders its actions in the modal action slots', async () => {
+    const onClose = vi.fn();
+    const onSave = vi.fn();
+    await mountWithAppContext(
+      <AddressModal {...defaultProps} onClose={onClose} onSave={onSave} />,
+    );
+
+    expect(screen.getByText('Cancel')).toHaveAttribute(
+      'slot',
+      'secondary-actions',
+    );
+    expect(screen.getByText('Continue')).toHaveAttribute(
+      'slot',
+      'primary-action',
+    );
+
+    await clickButton('Cancel');
+    expect(onClose).toHaveBeenCalled();
+
+    await clickButton('Continue');
+    expect(onSave).toHaveBeenCalled();
   });
 
   describe('loading state', () => {
@@ -91,7 +112,7 @@ describe('<AddressModal />', () => {
     it('disables the text inputs while loading', async () => {
       await mountWithAppContext(<AddressModal {...defaultProps} loading />);
 
-      expect(screen.getByRole('textbox', {name: 'First name'})).toBeDisabled();
+      expect(getField('First name')).toHaveAttribute('disabled');
     });
   });
 });

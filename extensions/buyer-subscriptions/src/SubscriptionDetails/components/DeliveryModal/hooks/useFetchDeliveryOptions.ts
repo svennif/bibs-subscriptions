@@ -65,7 +65,7 @@ export function useFetchDeliveryOptions() {
         {
           deliveryAddress: {
             ...restOfAddress,
-            territoryCode: country as CountryCode,
+            countryCode: country as CountryCode,
             zoneCode: province,
             phoneNumber: phone,
           },

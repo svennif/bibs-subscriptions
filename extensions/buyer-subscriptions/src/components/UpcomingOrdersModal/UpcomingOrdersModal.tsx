@@ -1,12 +1,4 @@
-import {
-  Banner,
-  Modal,
-  BlockStack,
-  Button,
-  InlineSpacer,
-  InlineLayout,
-  Text,
-} from '@shopify/ui-extensions-react/customer-account';
+import {parseGid} from '@shopify/admin-graphql-api-utilities';
 
 import type {BillingCycle} from 'types';
 
@@ -22,7 +14,9 @@ export interface UpcomingOrdersModalProps {
   refetchSubscriptionContract: () => void;
 }
 
-export const UPCOMING_ORDERS_MODAL_ID = 'skip-next-order-modal';
+export function getUpcomingOrdersModalId(contractId: string) {
+  return `upcoming-orders-modal-${parseGid(contractId)}`;
+}
 
 export function UpcomingOrdersModal({
   contractId,
@@ -30,10 +24,8 @@ export function UpcomingOrdersModal({
   refetchLoading,
   refetchSubscriptionContract,
 }: UpcomingOrdersModalProps) {
-  const {
-    i18n,
-    ui: {overlay},
-  } = useExtensionApi();
+  const modalId = getUpcomingOrdersModalId(contractId);
+  const {i18n} = useExtensionApi();
   const formatDate = useFormatDate();
 
   const upcomingBillingCyclesToDisplay = upcomingBillingCycles.slice(
@@ -53,27 +45,28 @@ export function UpcomingOrdersModal({
   });
 
   return (
-    <Modal
-      id={UPCOMING_ORDERS_MODAL_ID}
-      title={i18n.translate('upcomingOrdersModal.title')}
-      onClose={onCloseModal}
-      padding
+    <s-modal
+      id={modalId}
+      heading={i18n.translate('upcomingOrdersModal.title')}
+      padding="base"
+      onHide={onCloseModal}
     >
-      <BlockStack spacing="loose">
+      <s-stack gap="large">
         {bannerText && bannerStatus && (
-          <Banner status={bannerStatus}>{bannerText}</Banner>
+          <s-banner tone={bannerStatus}>{bannerText}</s-banner>
         )}
-        <BlockStack spacing="base">
+        <s-stack gap="base">
           {upcomingBillingCyclesToDisplay.map(
             ({cycleIndex, skipped, billingAttemptExpectedDate}) => {
               const orderDate = formatDate(billingAttemptExpectedDate);
               return (
-                <InlineLayout
+                <s-grid
                   key={cycleIndex}
-                  spacing="base"
-                  columns={['fill', 'auto']}
+                  gap="base"
+                  gridTemplateColumns="1fr auto"
+                  alignItems="center"
                 >
-                  <Text appearance={skipped ? 'subdued' : undefined}>
+                  <s-text color={skipped ? 'subdued' : undefined}>
                     {skipped
                       ? ` ${i18n.translate(
                           'upcomingOrdersModal.skippedOrderLabel',
@@ -82,11 +75,11 @@ export function UpcomingOrdersModal({
                           },
                         )}`
                       : orderDate}
-                  </Text>
-                  <Button
-                    kind="plain"
+                  </s-text>
+                  <s-button
+                    variant="secondary"
                     loading={cycleIndexLoading === cycleIndex}
-                    onPress={() => toggleSkipOrder(cycleIndex, skipped)}
+                    onClick={() => toggleSkipOrder(cycleIndex, skipped)}
                     accessibilityLabel={i18n.translate(
                       skipped
                         ? 'upcomingOrdersModal.unskipOrderAccessibilityLabel'
@@ -99,19 +92,21 @@ export function UpcomingOrdersModal({
                         ? 'upcomingOrdersModal.unSkipOrder'
                         : 'upcomingOrdersModal.skipOrder',
                     )}
-                  </Button>
-                </InlineLayout>
+                  </s-button>
+                </s-grid>
               );
             },
           )}
-        </BlockStack>
-        <InlineLayout columns={['fill', 'auto']}>
-          <InlineSpacer />
-          <Button onPress={() => overlay.close(UPCOMING_ORDERS_MODAL_ID)}>
-            {i18n.translate('close')}
-          </Button>
-        </InlineLayout>
-      </BlockStack>
-    </Modal>
+        </s-stack>
+      </s-stack>
+      <s-button
+        slot="primary-action"
+        variant="primary"
+        command="--hide"
+        commandFor={modalId}
+      >
+        {i18n.translate('close')}
+      </s-button>
+    </s-modal>
   );
 }

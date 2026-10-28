@@ -1,4 +1,4 @@
-import {useEffect, useCallback} from 'react';
+import {useEffect, useCallback} from 'preact/hooks';
 
 import SubscriptionDetailsQuery from './graphql/SubscriptionDetailsQuery';
 

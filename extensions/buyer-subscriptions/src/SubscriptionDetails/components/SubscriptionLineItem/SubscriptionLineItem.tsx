@@ -1,9 +1,3 @@
-import {
-  Text,
-  BlockStack,
-  InlineLayout,
-  ProductThumbnail,
-} from '@shopify/ui-extensions-react/customer-account';
 import {useExtensionApi} from 'foundation/Api';
 import type {SubscriptionLine} from 'types';
 
@@ -17,20 +11,19 @@ export function SubscriptionLineItem({line}: {line: SubscriptionLine}) {
   const isDiscounted = discountedPrice < currentPrice * line.quantity;
 
   return (
-    <InlineLayout
-      columns={['auto', 'fill', 'auto']}
-      spacing="base"
-      blockAlignment="center"
-      inlineAlignment="start"
-    >
-      <ProductThumbnail source={line.image?.url} badge={line.quantity} />
-      <BlockStack spacing="extraTight">
-        <Text>{line.title}</Text>
+    <s-grid gridTemplateColumns="auto 1fr auto" gap="base" alignItems="center">
+      <s-product-thumbnail
+        src={line.image?.url}
+        alt={line.image?.altText ?? line.title}
+        totalItems={line.quantity}
+      />
+      <s-stack gap="small-300">
+        <s-text>{line.title}</s-text>
         {line.variantTitle && (
-          <Text appearance="subdued">{line.variantTitle}</Text>
+          <s-text color="subdued">{line.variantTitle}</s-text>
         )}
         {line.quantity > 1 ? (
-          <Text size="small" appearance="subdued">
+          <s-text type="small" color="subdued">
             {i18n.translate('priceSummary.quantity', {
               quantity: i18n.formatCurrency(currentPrice, {
                 currency,
@@ -38,33 +31,32 @@ export function SubscriptionLineItem({line}: {line: SubscriptionLine}) {
                 currencyDisplay: 'narrowSymbol',
               }),
             })}
-          </Text>
+          </s-text>
         ) : null}
-      </BlockStack>
+      </s-stack>
 
-      <BlockStack spacing="none" inlineAlignment="end">
-        <Text
-          size={isDiscounted ? 'small' : 'base'}
-          appearance={isDiscounted ? 'subdued' : 'base'}
-          accessibilityRole={isDiscounted ? 'deletion' : undefined}
+      <s-stack gap="none" alignItems="end">
+        <s-text
+          type={isDiscounted ? 'redundant' : undefined}
+          color={isDiscounted ? 'subdued' : 'base'}
         >
           {i18n.formatCurrency(currentPrice * line.quantity, {
             currency,
             compactDisplay: 'short',
             currencyDisplay: 'narrowSymbol',
           })}
-        </Text>
+        </s-text>
 
         {isDiscounted && (
-          <Text>
+          <s-text>
             {i18n.formatCurrency(discountedPrice, {
               currency,
               compactDisplay: 'short',
               currencyDisplay: 'narrowSymbol',
             })}
-          </Text>
+          </s-text>
         )}
-      </BlockStack>
-    </InlineLayout>
+      </s-stack>
+    </s-grid>
   );
 }

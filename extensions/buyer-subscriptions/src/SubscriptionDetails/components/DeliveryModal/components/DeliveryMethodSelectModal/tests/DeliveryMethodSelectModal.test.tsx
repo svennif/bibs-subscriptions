@@ -2,14 +2,13 @@ import {mockApis} from 'tests/mocks/api';
 import {mockUiExtensionComponents} from 'tests/mocks/components';
 
 import {faker} from '@faker-js/faker';
-import {mountWithAppContext} from 'tests/utilities';
-import {screen, waitFor} from '@testing-library/react';
+import {clickButton, mountWithAppContext} from 'tests/utilities';
+import {fireEvent, screen, waitFor} from '@testing-library/preact';
 
 import {createMockDeliveryOptions} from '../../../tests/mocks/deliveryOptionMocks';
 import {DeliveryMethodSelectModal} from '../DeliveryMethodSelectModal';
 import * as useSelectDeliveryOptionHook from '../../../hooks/useSelectDeliveryOption';
 import {createMockAddress} from 'tests/mocks/address';
-import userEvent from '@testing-library/user-event';
 import type {InlineAddressProps} from '../components/InlineAddress';
 
 vi.mock('../../../hooks/useSelectDeliveryOption', () => ({
@@ -31,8 +30,7 @@ vi.mock('../components/InlineAddress', async () => ({
 const {mockExtensionApi} = mockApis();
 
 async function clickSaveButton() {
-  const saveButton = screen.getByRole('button', {name: 'Save'});
-  await userEvent.click(saveButton);
+  await clickButton('Save');
 }
 
 describe('<DeliveryMethodSelectModal />', () => {
@@ -64,6 +62,30 @@ describe('<DeliveryMethodSelectModal />', () => {
           screen.getByText(new RegExp(deliveryOption.presentmentTitle!)),
         ).toBeInTheDocument();
       });
+    });
+
+    it('selects the current delivery option and reports changes', async () => {
+      const onSelectionChange = vi.fn();
+      await mountWithAppContext(
+        <DeliveryMethodSelectModal
+          {...defaultProps}
+          onSelectionChange={onSelectionChange}
+        />,
+      );
+
+      const choiceList = document.querySelector('s-choice-list')!;
+      expect(
+        Array.from(choiceList.querySelectorAll('s-choice')).map((choice) =>
+          choice.getAttribute('value'),
+        ),
+      ).toEqual(mockDeliveryOptions.map(({code}) => code));
+
+      (choiceList as any).values = [mockDeliveryOptions[1].code];
+      fireEvent.change(choiceList);
+
+      expect(onSelectionChange).toHaveBeenCalledWith(
+        mockDeliveryOptions[1].code,
+      );
     });
   });
 
@@ -97,6 +119,34 @@ describe('<DeliveryMethodSelectModal />', () => {
         defaultProps.address.phone,
         '',
       );
+    });
+
+    it('calls onSuccess when a delivery method is returned', async () => {
+      const onSuccess = vi.fn();
+      vi.spyOn(
+        useSelectDeliveryOptionHook,
+        'useSelectDeliveryOption',
+      ).mockReturnValueOnce(
+        vi.fn().mockResolvedValue({deliveryMethod: {}, errors: []}),
+      );
+      await mountWithAppContext(
+        <DeliveryMethodSelectModal {...defaultProps} onSuccess={onSuccess} />,
+      );
+
+      await clickSaveButton();
+
+      expect(onSuccess).toHaveBeenCalled();
+    });
+
+    it('calls onClose when the cancel button is clicked', async () => {
+      const onClose = vi.fn();
+      await mountWithAppContext(
+        <DeliveryMethodSelectModal {...defaultProps} onClose={onClose} />,
+      );
+
+      await clickButton('Cancel');
+
+      expect(onClose).toHaveBeenCalled();
     });
 
     it('displays errors', async () => {

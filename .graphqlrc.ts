@@ -15,7 +15,7 @@ function getConfig() {
   }
 
   const apiVersion = 'unstable';
-  const customerApiVersion = 'unstable';
+  const customerApiVersion = '2026-10';
 
   const adminSchemaUrl = `https://${host}/services/graphql/introspection/admin?api_client_api_key=${apiKey}&api_version=${apiVersion}`;
 

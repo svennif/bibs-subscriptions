@@ -1,7 +1,7 @@
 import {mockApis} from 'tests/mocks/api';
 import {mockUiExtensionComponents} from 'tests/mocks/components';
 import {beforeEach} from 'vitest';
-import {screen} from '@testing-library/react';
+import {screen} from '@testing-library/preact';
 import {faker} from '@faker-js/faker';
 import {mountWithAppContext} from 'tests/utilities';
 
@@ -10,7 +10,7 @@ import {SubscriptionListItem} from '../SubscriptionListItem';
 
 const {mockExtensionApi} = mockApis();
 
-vi.mock('../SubscriptionActions', () => {
+vi.mock('../components', () => {
   return {
     SubscriptionActions: vi.fn(() => null),
   };
@@ -71,12 +71,9 @@ describe('SubscriptionListItem', () => {
       <SubscriptionListItem {...mockProps} />,
     );
 
-    const image = container.querySelector('image');
+    const image = container.querySelector('s-image');
 
-    expect(image).toHaveAttribute(
-      'source',
-      'shopify.com/some_product_image.png',
-    );
+    expect(image).toHaveAttribute('src', 'shopify.com/some_product_image.png');
   });
 
   it('renders line name if there is only one line', async () => {
@@ -168,9 +165,25 @@ describe('SubscriptionListItem', () => {
   });
 
   it('displays the accessibility label', async () => {
-    await mountWithAppContext(<SubscriptionListItem {...defaultProps} />);
+    const {container} = await mountWithAppContext(
+      <SubscriptionListItem {...defaultProps} />,
+    );
     const accessibilityLabel = `Manage subscription: ${defaultProps.firstLineName}`;
 
-    expect(screen.getByText(accessibilityLabel)).toBeInTheDocument();
+    expect(container.querySelector('s-clickable')).toHaveAttribute(
+      'accessibilityLabel',
+      accessibilityLabel,
+    );
+  });
+
+  it('links the card to the subscription details page', async () => {
+    const {container} = await mountWithAppContext(
+      <SubscriptionListItem {...defaultProps} />,
+    );
+
+    expect(container.querySelector('s-clickable')).toHaveAttribute(
+      'href',
+      'extension:/subscriptions/1',
+    );
   });
 });

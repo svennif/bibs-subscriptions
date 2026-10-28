@@ -23,10 +23,15 @@
     "checkJs": false,
     "noImplicitAny": false,
     "forceConsistentCasingInFileNames": true,
-    "baseUrl": ".",
     "paths": {
       "~/*": ["./app/*"],
-      "#/*": ["./test/*"]
+      "#/*": ["./test/*"],
+      "app/*": ["./app/*"],
+      "config": ["./config"],
+      "config/*": ["./config/*"],
+      "types/*": ["./types/*"],
+      "test/*": ["./test/*"],
+      "extensions/*": ["./extensions/*"]
     },
     "types": ["@shopify/app-bridge-types", "vitest/globals"],
     "noEmit": true,

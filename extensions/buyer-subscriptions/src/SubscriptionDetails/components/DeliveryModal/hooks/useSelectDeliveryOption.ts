@@ -43,7 +43,7 @@ export function useSelectDeliveryOption() {
                 ...addressInput,
                 phoneNumber: phone,
                 zoneCode: province,
-                territoryCode: country as CountryCode,
+                countryCode: country as CountryCode,
               },
             }
           : undefined,
@@ -53,7 +53,7 @@ export function useSelectDeliveryOption() {
                 ...addressInput,
                 phoneNumber: phone,
                 zoneCode: province,
-                territoryCode: country as CountryCode,
+                countryCode: country as CountryCode,
               },
               // there should be a field to enter a phone number
               phone: phoneNumber || '',
