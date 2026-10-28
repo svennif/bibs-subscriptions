@@ -18,46 +18,45 @@
   ],
   "compilerOptions": {
     "target": "ES2022",
-    "outDir": "./build",
-    "baseUrl": "./",
     "types": [
       "vitest/globals",
       "@testing-library/jest-dom"
     ],
     "paths": {
       "types": [
-        "src/types"
+        "./src/types"
       ],
       "generatedTypes/*": [
-        "types/*"
+        "./types/*"
       ],
       "foundation/*": [
-        "src/foundation/*"
+        "./src/foundation/*"
       ],
       "tests/*": [
-        "tests/*"
+        "./tests/*"
       ],
       "mocks/*": [
-        "tests/mocks/*"
+        "./tests/mocks/*"
       ],
       "customer-types": [
-        "src/types"
+        "./src/types"
       ],
       "utilities": [
-        "src/utilities"
+        "./src/utilities"
       ],
       "utilities/*": [
-        "src/utilities/*"
+        "./src/utilities/*"
       ],
       "components": [
-        "src/components"
+        "./src/components"
       ],
       "components/*": [
-        "src/components/*"
+        "./src/components/*"
       ]
     },
     "skipLibCheck": true,
     "jsx": "react-jsx",
-    "jsxImportSource": "preact"
+    "jsxImportSource": "preact",
+    "noEmit": true
   }
 }

@@ -12,15 +12,33 @@
     "noEmit": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "baseUrl": "./",
-    "outDir": "./build",
     "paths": {
-      "foundation/*": ["src/foundation/*"],
-      "generatedTypes/*": ["types/*"],
-      "tests/*": ["src/tests/*"],
-      "mocks/*": ["src/tests/mocks/*"]
+      "foundation/*": [
+        "./src/foundation/*"
+      ],
+      "generatedTypes/*": [
+        "./types/*"
+      ],
+      "tests/*": [
+        "./src/tests/*"
+      ],
+      "mocks/*": [
+        "./src/tests/mocks/*"
+      ],
+      "src/*": [
+        "./src/*"
+      ]
     }
   },
-  "include": ["./src", "./types", "tests/mocks", "../shared"],
-  "exclude": ["dist", "public", "node_modules/**/*"]
+  "include": [
+    "./src",
+    "./types",
+    "tests/mocks",
+    "../shared"
+  ],
+  "exclude": [
+    "dist",
+    "public",
+    "node_modules/**/*"
+  ]
 }

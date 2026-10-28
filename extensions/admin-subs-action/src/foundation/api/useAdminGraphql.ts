@@ -1,7 +1,17 @@
 import {useState} from 'react';
 import {useExtensionApi} from './useExtensionApi';
-import type {GraphQLError} from 'node_modules/@shopify/ui-extensions/build/ts/surfaces/admin/api/standard/standard';
+import type {StandardApi} from '@shopify/ui-extensions/admin';
 import {useExtensionTarget} from 'foundation/AdminExtensionContext';
+
+// GraphQLError isn't exported by @shopify/ui-extensions, so derive it from the
+// public query API.
+export type GraphQLError = NonNullable<
+  Awaited<
+    ReturnType<
+      StandardApi<'admin.product-purchase-option.action.render'>['query']
+    >
+  >['errors']
+>[number];
 
 type AdminGraphql<TData, TVariables> = [
   (query: string, variables: TVariables) => Promise<{data?: TData}>,

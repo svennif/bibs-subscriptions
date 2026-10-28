@@ -5,9 +5,8 @@
     "target": "ES2020",
     "checkJs": true,
     "allowJs": true,
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "esModuleInterop": true,
-    "outDir": "./dist",
     "skipLibCheck": true,
     "resolveJsonModule": true,
     "types": [
@@ -15,13 +14,27 @@
       "vitest/globals",
       "@testing-library/jest-dom"
     ],
-    "baseUrl": "./",
     "paths": {
-      "foundation/*": ["src/foundation/*"],
-      "tests/*": ["src/tests/*"],
-      "mocks/*": ["src/tests/mocks/*"]
-    }
+      "foundation/*": [
+        "./src/foundation/*"
+      ],
+      "tests/*": [
+        "./src/tests/*"
+      ],
+      "mocks/*": [
+        "./src/tests/mocks/*"
+      ]
+    },
+    "noEmit": true,
+    "strict": false
   },
-  "include": ["./src", "./shopify.d.ts"],
-  "exclude": ["dist", "public", "node_modules/**/*"]
+  "include": [
+    "./src",
+    "./shopify.d.ts"
+  ],
+  "exclude": [
+    "dist",
+    "public",
+    "node_modules/**/*"
+  ]
 }

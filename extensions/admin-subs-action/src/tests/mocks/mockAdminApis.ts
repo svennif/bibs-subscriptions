@@ -1,7 +1,7 @@
 import {vi} from 'vitest';
 
 import translations from '../../../locales/en.default.json';
-import type {GraphQLError} from 'node_modules/@shopify/ui-extensions/build/ts/surfaces/admin/api/standard/standard';
+import type {GraphQLError} from 'foundation/api/useAdminGraphql';
 import {createMockI18n} from '../../../../shared/mocks/i18n';
 export function mockAdminApis() {
   const mockUseAdminGraphql = vi.hoisted(() => {

@@ -6,9 +6,9 @@ import {useNavigationCurrentEntry} from 'foundation/Api';
 export function Router() {
   const currentEntry = useNavigationCurrentEntry();
 
-  const url = new URL(currentEntry.url ?? '');
+  const url = currentEntry?.url ? new URL(currentEntry.url) : null;
 
-  if (url.pathname.includes('subscriptions')) {
+  if (url?.pathname.includes('subscriptions')) {
     const id = getSubscriptionIdFromPath(url.pathname);
 
     return <SubscriptionDetails id={id} />;
