@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "build": "NODE_ENV=production remix vite:build",
-    "dev": "dotenv -c development pnpm shopify app dev",
+    "dev": "shopify app dev --tunnel-url=https://bibs-tunnel.svenni.dev:3000",
     "generate": "shopify app generate",
     "env": "shopify app env",
     "start": "remix-serve ./build/server/index.js",
